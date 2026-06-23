@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pioneers — AI History</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .pioneer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+    .p-card {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.75rem;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .p-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--violet);
+      box-shadow: 0 16px 40px rgba(155,89,255,0.15);
+    }
+    .p-card::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: var(--card-accent, var(--violet));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .p-card:hover::after { opacity: 1; }
+    .p-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      border: 2px solid var(--rim);
+      transition: border-color var(--transition);
+    }
+    .p-card:hover .p-avatar { border-color: var(--card-accent, var(--violet)); }
+    .p-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--white);
+      margin-bottom: 0.15rem;
+    }
+    .p-years {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .p-role {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--card-accent, var(--violet));
+      margin-bottom: 0.75rem;
+    }
+    .p-bio {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+    }
+    .p-contributions {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text);
+      border-top: 1px solid var(--rim);
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .p-contrib-label {
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 0.6rem;
+      margin-bottom: 0.3rem;
+    }
+    .p-contrib-item {
+      display: flex; gap: 0.4rem;
+      padding: 0.2rem 0;
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+    .p-contrib-item::before { content: '→'; color: var(--card-accent, var(--violet)); }
+
+    /* Hall of Fame banner */
+    .hof-banner {
+      background: linear-gradient(135deg, rgba(155,89,255,0.1), rgba(0,229,255,0.1));
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 2rem;
+      margin-bottom: 3rem;
+      display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;
+    }
+    .hof-avatars { display: flex; }
+    .hof-av {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      border: 2px solid var(--cosmos);
+      margin-left: -12px;
+    }
+    .hof-av:first-child { margin-left: 0; }
+    .hof-text h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--white);
+      margin-bottom: 0.3rem;
+    }
+    .hof-text p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .era-badge {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 3px;
+      border: 1px solid;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+    .era-founder  { color: var(--amber);   border-color: rgba(255,179,0,0.3);  background: rgba(255,179,0,0.05); }
+    .era-neural   { color: var(--cyan);    border-color: rgba(0,229,255,0.3);  background: rgba(0,229,255,0.05); }
+    .era-modern   { color: var(--phosphor);border-color:rgba(57,255,20,0.3);   background: rgba(57,255,20,0.04); }
+    .era-llm      { color: var(--violet);  border-color: rgba(155,89,255,0.3); background: rgba(155,89,255,0.06); }
+    .era-safety   { color: var(--rose);    border-color: rgba(255,75,110,0.3); background: rgba(255,75,110,0.05); }
+
+    .era-section-head {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin: 3rem 0 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--rim);
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .era-section-head::before {
+      content: '';
+      width: 4px; height: 24px;
+      border-radius: 2px;
+      background: var(--era-color, var(--cyan));
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<nav class="nav">
+  <a class="nav-brand" href="index.html">AI<span>History</span></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="timeline.html">Timeline</a>
+    <a href="branches.html">Branches</a>
+    <a href="pioneers.html" class="active">Pioneers</a>
+    <a href="milestones.html">Milestones</a>
+    <a href="explorer.html">Explorer</a>
+  </div>
+  <div class="nav-hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="nav-mobile">
+  <a href="index.html">Home</a><a href="timeline.html">Timeline</a>
+  <a href="branches.html">Branches</a><a href="pioneers.html">Pioneers</a>
+  <a href="milestones.html">Milestones</a><a href="explorer.html">Explorer</a>
+</div>
+
+<div class="page-wrap">
+
+  <!-- PAGE HERO -->
+  <div style="padding:4rem 0 2rem;background:linear-gradient(to bottom,var(--deep),var(--cosmos));">
+    <div class="container">
+      <div class="sec-eyebrow">The People Who Built AI</div>
+      <h1 class="sec-title" style="font-size:clamp(2rem,4vw,3.2rem);margin-bottom:.75rem;">
+        AI <span class="accent">Pioneers</span>
+      </h1>
+      <p style="color:var(--muted);max-width:58ch;">
+        The scientists, mathematicians, engineers and visionaries whose ideas — 
+        and arguments — created the field of Artificial Intelligence.
+      </p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2rem;">
+
+    <!-- HOF -->
+    <div class="hof-banner animate-in">
+      <div class="hof-avatars">
+        <div class="hof-av" style="background:linear-gradient(135deg,#9b59ff,#00e5ff);">🧠</div>
+        <div class="hof-av" style="background:linear-gradient(135deg,#ffb300,#ff4b6e);">🤖</div>
+        <div class="hof-av" style="background:linear-gradient(135deg,#39ff14,#00e5ff);">🔬</div>
+        <div class="hof-av" style="background:linear-gradient(135deg,#ff4b6e,#9b59ff);">💡</div>
+        <div class="hof-av" style="background:linear-gradient(135deg,#00e5ff,#39ff14);">📐</div>
+        <div class="hof-av" style="background:rgba(255,179,0,0.2);">+55</div>
+      </div>
+      <div class="hof-text">
+        <h3>60+ Pioneers catalogued across 8 decades</h3>
+        <p>From 1943's first neural model to today's foundation model researchers — the complete who's who of AI.</p>
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-bar" style="margin-bottom:2rem;">
+      <input class="search-input" id="pioneerSearch" type="search" placeholder="Search pioneers by name, contribution…"/>
+      <div class="filter-chips">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="founder">Founders</button>
+        <button class="chip" data-filter="neural">Neural</button>
+        <button class="chip" data-filter="nlp">NLP</button>
+        <button class="chip" data-filter="vision">Vision</button>
+        <button class="chip" data-filter="rl">RL</button>
+        <button class="chip" data-filter="safety">Safety</button>
+        <button class="chip" data-filter="robot">Robotics</button>
+      </div>
+    </div>
+
+    <!-- ===== ERA: FOUNDERS ===== -->
+    <div class="era-section-head" style="--era-color:var(--amber);">Founding Era (1940s–1960s)</div>
+    <div class="pioneer-grid" id="pioneerGrid">
+
+      <div class="p-card animate-in" data-tags="founder neural" style="--card-accent:var(--amber);">
+        <div class="era-badge era-founder">Founder · 1943</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,179,0,0.2),rgba(255,179,0,0.05));">🧠</div>
+        <div class="p-name">Warren McCulloch</div>
+        <div class="p-years">1898 – 1969</div>
+        <div class="p-role">Neuroscientist &amp; Logician</div>
+        <p class="p-bio">Neuroscientist who collaborated with Walter Pitts to publish the 1943 paper that launched neural network theory — proposing that neurons could compute any logical function.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">McCulloch–Pitts neuron model (1943)</div>
+          <div class="p-contrib-item">Logical calculus of nervous activity</div>
+          <div class="p-contrib-item">Theoretical foundation of ANNs</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="1" data-tags="founder neural" style="--card-accent:var(--amber);">
+        <div class="era-badge era-founder">Founder · 1943</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,179,0,0.2),rgba(255,179,0,0.05));">📐</div>
+        <div class="p-name">Walter Pitts</div>
+        <div class="p-years">1923 – 1969</div>
+        <div class="p-role">Mathematician &amp; Logician</div>
+        <p class="p-bio">Self-taught mathematical prodigy who co-authored the landmark 1943 neural network paper with Warren McCulloch at age 20. His formalism made the neuron model mathematically rigorous.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">McCulloch–Pitts neuron (1943)</div>
+          <div class="p-contrib-item">First mathematical model of brain</div>
+          <div class="p-contrib-item">Binary threshold functions</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="2" data-tags="founder theory" style="--card-accent:var(--cyan);">
+        <div class="era-badge era-founder">Founder · 1950</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,229,255,0.05));">🔐</div>
+        <div class="p-name">Alan Turing</div>
+        <div class="p-years">1912 – 1954</div>
+        <div class="p-role">Mathematician &amp; Computer Scientist</div>
+        <p class="p-bio">Father of theoretical computer science and AI. His 1950 paper "Computing Machinery and Intelligence" proposed the Turing Test — the first formal framework for machine intelligence — and predicted AI's development with startling accuracy.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Turing Test — imitation game (1950)</div>
+          <div class="p-contrib-item">Universal Turing Machine (1936)</div>
+          <div class="p-contrib-item">Codebreaking Enigma — WWII AI</div>
+          <div class="p-contrib-item">Theory of morphogenesis &amp; pattern formation</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Theory</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="3" data-tags="founder symbolic nlp" style="--card-accent:var(--violet);">
+        <div class="era-badge era-founder">Founder · 1956</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(155,89,255,0.05));">🧩</div>
+        <div class="p-name">John McCarthy</div>
+        <div class="p-years">1927 – 2011</div>
+        <div class="p-role">Father of Artificial Intelligence</div>
+        <p class="p-bio">Coined the term "Artificial Intelligence" and organised the 1956 Dartmouth Conference. Invented Lisp (1958), a programming language that powered AI research for three decades. Pioneered time-sharing computing at MIT and Stanford.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Coined "Artificial Intelligence" (1956)</div>
+          <div class="p-contrib-item">Dartmouth Conference organiser</div>
+          <div class="p-contrib-item">Lisp programming language (1958)</div>
+          <div class="p-contrib-item">Situation calculus &amp; formal logic</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">Symbolic</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="4" data-tags="founder symbolic neural" style="--card-accent:var(--violet);">
+        <div class="era-badge era-founder">Founder · 1951</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(155,89,255,0.05));">🤖</div>
+        <div class="p-name">Marvin Minsky</div>
+        <div class="p-years">1927 – 2016</div>
+        <div class="p-role">Co-founder MIT AI Lab</div>
+        <p class="p-bio">Built SNARC (1951) — the first neural network machine. Co-founded the MIT AI Lab with McCarthy. His 1969 book "Perceptrons" nearly ended neural network research, yet he remained a central figure in AI philosophy and cognitive science.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">SNARC — first neural network machine</div>
+          <div class="p-contrib-item">Co-founded MIT AI Lab (1959)</div>
+          <div class="p-contrib-item">Frames theory of knowledge</div>
+          <div class="p-contrib-item">Society of Mind theory</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">Symbolic</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="5" data-tags="founder symbolic ml" style="--card-accent:var(--phosphor);">
+        <div class="era-badge era-founder">Founder · 1956</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(57,255,20,0.15),rgba(57,255,20,0.03));">⚙️</div>
+        <div class="p-name">Herbert Simon</div>
+        <div class="p-years">1916 – 2001</div>
+        <div class="p-role">Nobel Laureate · Cognitive Scientist</div>
+        <p class="p-bio">Nobel Prize in Economics (1978). With Allen Newell, built Logic Theorist (1956) and General Problem Solver (1957). His work bridged economics, psychology, and AI through bounded rationality and heuristic search.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Logic Theorist (1956)</div>
+          <div class="p-contrib-item">General Problem Solver (1957)</div>
+          <div class="p-contrib-item">Bounded rationality theory</div>
+          <div class="p-contrib-item">Nobel Prize in Economics (1978)</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">Symbolic</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="6" data-tags="founder ml" style="--card-accent:var(--phosphor);">
+        <div class="era-badge era-founder">ML Pioneer · 1959</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(57,255,20,0.15),rgba(57,255,20,0.03));">🎮</div>
+        <div class="p-name">Arthur Samuel</div>
+        <div class="p-years">1901 – 1990</div>
+        <div class="p-role">Father of Machine Learning</div>
+        <p class="p-bio">IBM researcher who coined "Machine Learning" in 1959 while building a self-improving checkers program. His program became expert-level by studying its own games — the first demonstration of a learning machine improving beyond its programmer's ability.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Coined "Machine Learning" (1959)</div>
+          <div class="p-contrib-item">Self-learning checkers program</div>
+          <div class="p-contrib-item">Alpha-beta pruning concepts</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-green">ML</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="7" data-tags="founder neural" style="--card-accent:var(--cyan);">
+        <div class="era-badge era-founder">Neural · 1957</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,229,255,0.05));">👁️</div>
+        <div class="p-name">Frank Rosenblatt</div>
+        <div class="p-years">1928 – 1971</div>
+        <div class="p-role">Inventor of the Perceptron</div>
+        <p class="p-bio">Created the Perceptron (1957) — the first algorithm capable of learning from data through supervised training. The US Navy funded it as a machine that could perceive and identify its surroundings. His tragic early death at 43 cut short a revolutionary career.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Perceptron — first learning algorithm</div>
+          <div class="p-contrib-item">Mark I Perceptron hardware</div>
+          <div class="p-contrib-item">Supervised learning foundations</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Founder</span>
+        </div>
+      </div>
+
+    </div><!-- end founder grid -->
+
+    <!-- ===== ERA: NEURAL RENAISSANCE ===== -->
+    <div class="era-section-head" style="--era-color:var(--cyan);">Neural Renaissance (1970s–1990s)</div>
+    <div class="pioneer-grid">
+
+      <div class="p-card animate-in" data-tags="neural ml founder" style="--card-accent:var(--cyan);">
+        <div class="era-badge era-neural">Neural Pioneer</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,229,255,0.05));">🏆</div>
+        <div class="p-name">Geoffrey Hinton</div>
+        <div class="p-years">b. 1947</div>
+        <div class="p-role">Godfather of Deep Learning · Turing Award 2018</div>
+        <p class="p-bio">The single most influential figure in modern deep learning. Popularised backpropagation (1986), co-invented Boltzmann machines, Dropout, and Capsule Networks. His student Krizhevsky's AlexNet (2012) ignited the deep learning revolution. Left Google in 2023 to speak freely about AI risks.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Backpropagation (Rumelhart, Williams, 1986)</div>
+          <div class="p-contrib-item">Deep Belief Networks (2006)</div>
+          <div class="p-contrib-item">Dropout regularisation</div>
+          <div class="p-contrib-item">Turing Award (2018) with LeCun &amp; Bengio</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-green">ML</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="1" data-tags="neural vision ml" style="--card-accent:var(--cyan);">
+        <div class="era-badge era-neural">Neural Pioneer</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,229,255,0.05));">🌊</div>
+        <div class="p-name">Yann LeCun</div>
+        <div class="p-years">b. 1960</div>
+        <div class="p-role">Father of CNNs · Turing Award 2018</div>
+        <p class="p-bio">Invented Convolutional Neural Networks (LeNet, 1989) while at Bell Labs, creating a system that read 10% of US cheques by the 1990s. His work at NYU and Meta (Chief AI Scientist) made CNNs the dominant computer vision architecture.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">LeNet — Convolutional Neural Networks (1989)</div>
+          <div class="p-contrib-item">MNIST dataset &amp; benchmarking</div>
+          <div class="p-contrib-item">Self-supervised learning advocacy</div>
+          <div class="p-contrib-item">Turing Award (2018)</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Vision</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="2" data-tags="neural ml" style="--card-accent:var(--cyan);">
+        <div class="era-badge era-neural">Neural Pioneer</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(0,229,255,0.2),rgba(0,229,255,0.05));">📊</div>
+        <div class="p-name">Yoshua Bengio</div>
+        <div class="p-years">b. 1964</div>
+        <div class="p-role">Deep Learning Pioneer · Turing Award 2018</div>
+        <p class="p-bio">Professor at Université de Montréal whose lab pioneered deep learning, attention mechanisms, and generative models. Co-invented word embeddings (2001) and the attention mechanism foundational to Transformers. Strong AI safety advocate.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Word embeddings (neural language models)</div>
+          <div class="p-contrib-item">Attention mechanisms for seq2seq</div>
+          <div class="p-contrib-item">GAN theory contributions</div>
+          <div class="p-contrib-item">Turing Award (2018)</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-rose">NLP</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="3" data-tags="neural rl" style="--card-accent:var(--rose);">
+        <div class="era-badge era-neural">RL Pioneer</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,75,110,0.03));">🎯</div>
+        <div class="p-name">Richard Sutton</div>
+        <div class="p-years">b. 1956</div>
+        <div class="p-role">Father of Reinforcement Learning</div>
+        <p class="p-bio">Developed temporal-difference learning (1988) and co-authored "Reinforcement Learning: An Introduction" — the definitive RL textbook. His "Bitter Lesson" essay (2019) argues that general computation always beats human knowledge in AI.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Temporal-Difference Learning (TD)</div>
+          <div class="p-contrib-item">Policy gradient methods</div>
+          <div class="p-contrib-item">RL textbook (with Barto)</div>
+          <div class="p-contrib-item">"The Bitter Lesson" (2019)</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-rose">RL</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="4" data-tags="neural nlp" style="--card-accent:var(--rose);">
+        <div class="era-badge era-neural">LSTM · 1997</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,75,110,0.03));">🔄</div>
+        <div class="p-name">Sepp Hochreiter</div>
+        <div class="p-years">b. 1967</div>
+        <div class="p-role">Inventor of LSTM</div>
+        <p class="p-bio">Co-invented Long Short-Term Memory (LSTM) with Jürgen Schmidhuber in 1997 — a recurrent network that solved the vanishing gradient problem. LSTMs powered speech recognition, translation, and text generation for two decades before Transformers.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">LSTM (1997) — memory for sequences</div>
+          <div class="p-contrib-item">Vanishing gradient problem analysis</div>
+          <div class="p-contrib-item">Gated recurrent architectures</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-rose">NLP</span><span class="tag tag-cyan">Neural</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="5" data-tags="vision ml" style="--card-accent:var(--amber);">
+        <div class="era-badge era-neural">Vision · 2007</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,179,0,0.2),rgba(255,179,0,0.04));">👁️</div>
+        <div class="p-name">Fei-Fei Li</div>
+        <div class="p-years">b. 1976</div>
+        <div class="p-role">Creator of ImageNet</div>
+        <p class="p-bio">Stanford professor who built ImageNet (2007–2009) — the 14-million-image dataset that triggered the 2012 deep learning explosion. Pioneer of AI ethics and co-founded AI4ALL to promote diversity in AI education. Former Google Cloud Chief Scientist.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">ImageNet dataset (2007)</div>
+          <div class="p-contrib-item">ILSVRC competition (2010)</div>
+          <div class="p-contrib-item">AI4ALL — diversity in AI</div>
+          <div class="p-contrib-item">Spatial transformer networks</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-amber">Vision</span><span class="tag tag-rose">Ethics</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== ERA: MODERN AI ===== -->
+    <div class="era-section-head" style="--era-color:var(--phosphor);">The Modern Era (2010s–Present)</div>
+    <div class="pioneer-grid">
+
+      <div class="p-card animate-in" data-tags="nlp llm ml" style="--card-accent:var(--phosphor);">
+        <div class="era-badge era-modern">Transformer Era</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(57,255,20,0.15),rgba(57,255,20,0.03));">💬</div>
+        <div class="p-name">Ilya Sutskever</div>
+        <div class="p-years">b. 1986</div>
+        <div class="p-role">Co-founder OpenAI · AlexNet &amp; GPT</div>
+        <p class="p-bio">Hinton's PhD student who co-invented AlexNet (2012) — the paper that started the deep learning revolution. Co-founded OpenAI and led GPT, GPT-2, GPT-3, and GPT-4 development. One of the most influential figures in the current AI wave.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">AlexNet (2012)</div>
+          <div class="p-contrib-item">Sequence-to-Sequence learning</div>
+          <div class="p-contrib-item">GPT series — OpenAI</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-cyan">Neural</span><span class="tag tag-violet">LLM</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="1" data-tags="rl ml" style="--card-accent:var(--rose);">
+        <div class="era-badge era-modern">AlphaGo Era</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,75,110,0.03));">♟️</div>
+        <div class="p-name">Demis Hassabis</div>
+        <div class="p-years">b. 1976</div>
+        <div class="p-role">Co-founder DeepMind · Nobel Prize 2024</div>
+        <p class="p-bio">Child chess prodigy who co-founded DeepMind (2010, acquired by Google 2014). Led development of AlphaGo, AlphaFold, Gemini, and Gemma. Awarded the 2024 Nobel Prize in Chemistry for AlphaFold's protein structure predictions.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">AlphaGo &amp; AlphaZero (2016–2018)</div>
+          <div class="p-contrib-item">AlphaFold 2 — protein folding (2021)</div>
+          <div class="p-contrib-item">DQN — Atari from pixels (2013)</div>
+          <div class="p-contrib-item">Nobel Prize Chemistry (2024)</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-rose">RL</span><span class="tag tag-green">Science</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="2" data-tags="nlp llm vision" style="--card-accent:var(--violet);">
+        <div class="era-badge era-llm">LLM Era</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(155,89,255,0.04));">🌟</div>
+        <div class="p-name">Ashish Vaswani</div>
+        <div class="p-years">b. ~1985</div>
+        <div class="p-role">Lead Author — "Attention Is All You Need"</div>
+        <p class="p-bio">Google Brain researcher who led the team that published "Attention Is All You Need" (2017) — the Transformer paper that underpins every modern LLM. This single paper, cited 100,000+ times, is the most consequential ML paper of the decade.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Transformer architecture (2017)</div>
+          <div class="p-contrib-item">Multi-head self-attention</div>
+          <div class="p-contrib-item">Positional encodings</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">LLM</span><span class="tag tag-rose">NLP</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="3" data-tags="nlp llm safety" style="--card-accent:var(--violet);">
+        <div class="era-badge era-llm">GPT Era</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(155,89,255,0.04));">🤖</div>
+        <div class="p-name">Sam Altman</div>
+        <div class="p-years">b. 1985</div>
+        <div class="p-role">CEO OpenAI · Former YC President</div>
+        <p class="p-bio">Former Y Combinator president who became CEO of OpenAI in 2019. Oversaw the development and launch of GPT-3, DALL-E, ChatGPT, and GPT-4 — transforming AI from a research field into the world's fastest-growing consumer technology.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">ChatGPT launch strategy (2022)</div>
+          <div class="p-contrib-item">OpenAI commercial scaling</div>
+          <div class="p-contrib-item">GPT-4 &amp; DALL-E oversight</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">LLM</span><span class="tag tag-rose">Industry</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="4" data-tags="safety llm nlp" style="--card-accent:var(--rose);">
+        <div class="era-badge era-safety">AI Safety</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,75,110,0.03));">🛡️</div>
+        <div class="p-name">Dario Amodei</div>
+        <div class="p-years">b. 1983</div>
+        <div class="p-role">CEO Anthropic · Former OpenAI VP</div>
+        <p class="p-bio">Physicist and AI researcher who led GPT-2 and GPT-3 research at OpenAI before co-founding Anthropic (2021) with his sister Daniela to focus on AI safety. Developed Constitutional AI and Claude — an AI assistant built with safety-first principles.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Constitutional AI (CAI)</div>
+          <div class="p-contrib-item">Claude AI assistant</div>
+          <div class="p-contrib-item">RLHF scaling research</div>
+          <div class="p-contrib-item">AI safety advocacy at scale</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-rose">Safety</span><span class="tag tag-violet">LLM</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="5" data-tags="vision generation ml" style="--card-accent:var(--phosphor);">
+        <div class="era-badge era-modern">Generative AI</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(57,255,20,0.15),rgba(57,255,20,0.03));">🎨</div>
+        <div class="p-name">Ian Goodfellow</div>
+        <div class="p-years">b. 1985</div>
+        <div class="p-role">Inventor of GANs</div>
+        <p class="p-bio">Invented Generative Adversarial Networks (GANs) in a single night in 2014 after a debate about neural networks in a Montreal bar. GANs launched the generative AI revolution — deepfakes, synthetic data, artistic generation, and eventually diffusion models.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">GANs — Generative Adversarial Networks (2014)</div>
+          <div class="p-contrib-item">Deep Learning textbook (Goodfellow, Bengio)</div>
+          <div class="p-contrib-item">Virtual adversarial training</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">Generative</span><span class="tag tag-amber">Vision</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="6" data-tags="robot vision ml" style="--card-accent:var(--violet);">
+        <div class="era-badge era-modern">Robotics</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(155,89,255,0.2),rgba(155,89,255,0.04));">🦿</div>
+        <div class="p-name">Rodney Brooks</div>
+        <div class="p-years">b. 1954</div>
+        <div class="p-role">Father of Modern Robotics</div>
+        <p class="p-bio">MIT professor who challenged symbolic AI with "behaviour-based robotics" — arguing that intelligence emerges from simple reactive systems, not reasoning. Founded iRobot (Roomba) and Rethink Robotics. Pioneered the reactive/subsumption architecture.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">Subsumption architecture (1986)</div>
+          <div class="p-contrib-item">Co-founded iRobot — Roomba (2002)</div>
+          <div class="p-contrib-item">Behaviour-based robotics paradigm</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-violet">Robotics</span>
+        </div>
+      </div>
+
+      <div class="p-card animate-in" data-delay="7" data-tags="safety theory" style="--card-accent:var(--rose);">
+        <div class="era-badge era-safety">Safety Theorist</div>
+        <div class="p-avatar" style="background:linear-gradient(135deg,rgba(255,75,110,0.15),rgba(255,75,110,0.03));">📖</div>
+        <div class="p-name">Nick Bostrom</div>
+        <div class="p-years">b. 1973</div>
+        <div class="p-role">AI Risk Philosopher</div>
+        <p class="p-bio">Oxford philosopher who founded the Future of Humanity Institute and wrote "Superintelligence" (2014) — the book that made AI existential risk a mainstream concern and influenced Elon Musk, Bill Gates, and the AI safety research agenda.</p>
+        <div class="p-contributions">
+          <div class="p-contrib-label">Key contributions</div>
+          <div class="p-contrib-item">"Superintelligence" (2014)</div>
+          <div class="p-contrib-item">Existential risk framework</div>
+          <div class="p-contrib-item">Future of Humanity Institute</div>
+        </div>
+        <div class="timeline-tags" style="margin-top:.75rem;">
+          <span class="tag tag-rose">Safety</span>
+        </div>
+      </div>
+
+    </div><!-- end modern grid -->
+
+  </div><!-- end container -->
+</div><!-- end page-wrap -->
+
+<footer class="footer">
+  <div class="footer-brand">AI<span>History</span></div>
+  <p class="footer-copy">AI HISTORY © 2024 — Pioneers of Artificial Intelligence</p>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+window.AI.initFilters({
+  searchId: 'pioneerSearch',
+  chipsSelector: '.chip',
+  itemsSelector: '.p-card',
+  textSelector: '.p-name, .p-bio, .p-role',
+  tagSelector: '.tag',
+});
+</script>
+</body>
+</html>

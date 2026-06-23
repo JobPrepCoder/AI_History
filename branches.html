@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Branches — AI History</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .branches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .b-card {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.75rem;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .b-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--accent-color, var(--cyan));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .b-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color, var(--cyan));
+      background: var(--surface);
+    }
+    .b-card:hover::before { opacity: 1; }
+    .b-head { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+    .b-icon {
+      font-size: 1.8rem;
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .b-meta { flex: 1; }
+    .b-year {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .b-name {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .b-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .b-milestones {
+      border-top: 1px solid var(--rim);
+      padding-top: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .b-milestone-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .b-milestone-item {
+      font-size: 0.78rem;
+      color: var(--text);
+      padding: 0.2rem 0;
+      border-bottom: 1px solid rgba(26,45,79,0.4);
+      display: flex; gap: 0.5rem;
+    }
+    .b-milestone-item:last-child { border-bottom: none; }
+    .b-mile-year {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+    .hero-tree {
+      position: relative;
+      text-align: center;
+      padding: 2rem 0;
+      overflow: hidden;
+    }
+    .tree-canvas-wrap {
+      max-width: 700px; margin: 0 auto;
+    }
+    #treeCanvas {
+      width: 100%; height: 300px;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--rim);
+      background: var(--panel);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<nav class="nav">
+  <a class="nav-brand" href="index.html">AI<span>History</span></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="timeline.html">Timeline</a>
+    <a href="branches.html" class="active">Branches</a>
+    <a href="pioneers.html">Pioneers</a>
+    <a href="milestones.html">Milestones</a>
+    <a href="explorer.html">Explorer</a>
+  </div>
+  <div class="nav-hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="nav-mobile">
+  <a href="index.html">Home</a><a href="timeline.html">Timeline</a>
+  <a href="branches.html">Branches</a><a href="pioneers.html">Pioneers</a>
+  <a href="milestones.html">Milestones</a><a href="explorer.html">Explorer</a>
+</div>
+
+<div class="page-wrap">
+
+  <div style="padding: 4rem 0 2rem; background: linear-gradient(to bottom, var(--deep), var(--cosmos));">
+    <div class="container">
+      <div class="sec-eyebrow">Taxonomy of AI</div>
+      <h1 class="sec-title" style="font-size:clamp(2rem,4vw,3.2rem);margin-bottom:0.75rem;">
+        AI <span class="accent">Branches</span> &amp; Disciplines
+      </h1>
+      <p style="color:var(--muted);max-width:60ch;">
+        From the single root planted in 1943, AI has grown into 24 distinct disciplines, 
+        each with its own history, methods, and impact on the world.
+      </p>
+    </div>
+  </div>
+
+  <!-- TREE VISUAL -->
+  <div class="container" style="padding-top:2rem;">
+    <div class="tree-canvas-wrap animate-in">
+      <canvas id="treeCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div style="position:sticky;top:64px;z-index:100;background:rgba(4,8,18,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--rim);padding:1rem 0;">
+    <div class="container">
+      <div class="filter-bar">
+        <input class="search-input" id="branchSearch" type="search" placeholder="Search branches…" />
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">All 24</button>
+          <button class="chip" data-filter="learning">Learning</button>
+          <button class="chip" data-filter="perception">Perception</button>
+          <button class="chip" data-filter="reasoning">Reasoning</button>
+          <button class="chip" data-filter="language">Language</button>
+          <button class="chip" data-filter="generation">Generation</button>
+          <button class="chip" data-filter="action">Action</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:3rem;padding-bottom:5rem;">
+    <div class="branches-grid" id="branchGrid">
+
+      <!-- 1. Symbolic AI -->
+      <div class="b-card animate-in" data-category="reasoning" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.1);">🧩</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1956 — Dartmouth</div>
+            <div class="b-name">Symbolic AI</div>
+          </div>
+        </div>
+        <p class="b-desc">The original AI paradigm — representing knowledge as explicit rules, logic, and symbols. Dominated AI from 1956 to the late 1980s. Parent of expert systems, knowledge graphs, and ontologies.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Reasoning</span>
+          <span class="tag tag-violet">Foundational</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-label">Key milestones</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1956</span>Logic Theorist (Newell &amp; Simon)</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1958</span>Lisp language invented</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1965</span>DENDRAL — first expert system</div>
+        </div>
+      </div>
+
+      <!-- 2. Neural Networks -->
+      <div class="b-card animate-in" data-delay="1" data-category="learning" style="--accent-color: var(--cyan);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(0,229,255,0.1);">🧠</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1943 — McCulloch &amp; Pitts</div>
+            <div class="b-name">Neural Networks</div>
+          </div>
+        </div>
+        <p class="b-desc">Brain-inspired computing using layers of interconnected nodes. The foundational idea from 1943 evolved through the perceptron (1957), backprop (1986), deep learning (2006), and today's trillion-parameter models.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-cyan">Learning</span>
+          <span class="tag tag-violet">Foundational</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-label">Key milestones</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1943</span>McCulloch-Pitts neuron model</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1986</span>Backpropagation popularised</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2012</span>AlexNet — deep learning breaks out</div>
+        </div>
+      </div>
+
+      <!-- 3. Machine Learning -->
+      <div class="b-card animate-in" data-delay="2" data-category="learning" style="--accent-color: var(--phosphor);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(57,255,20,0.08);">🎯</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1959 — Arthur Samuel</div>
+            <div class="b-name">Machine Learning</div>
+          </div>
+        </div>
+        <p class="b-desc">Systems that improve from experience without being explicitly programmed. Encompasses supervised, unsupervised, and semi-supervised learning across decision trees, SVMs, random forests, and neural approaches.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-green">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-label">Key milestones</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1959</span>Samuel coins "Machine Learning"</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1992</span>SVMs introduced by Vapnik</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2001</span>Random Forests — Breiman</div>
+        </div>
+      </div>
+
+      <!-- 4. Deep Learning -->
+      <div class="b-card animate-in" data-delay="3" data-category="learning" style="--accent-color: var(--cyan);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(0,229,255,0.1);">🌊</div>
+          <div class="b-meta">
+            <div class="b-year">Born 2006 — Hinton et al.</div>
+            <div class="b-name">Deep Learning</div>
+          </div>
+        </div>
+        <p class="b-desc">Multi-layer neural networks trained on massive data using GPUs. The dominant paradigm since 2012. Sub-fields: CNNs for vision, RNNs/Transformers for sequences, autoencoders for generation.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-cyan">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2006</span>Deep Belief Networks — Hinton</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2012</span>AlexNet wins ImageNet</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2017</span>Transformer architecture</div>
+        </div>
+      </div>
+
+      <!-- 5. Natural Language Processing -->
+      <div class="b-card animate-in" data-delay="4" data-category="language" style="--accent-color: var(--rose);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,75,110,0.08);">🗣️</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1954 — Georgetown Experiment</div>
+            <div class="b-name">Natural Language Processing</div>
+          </div>
+        </div>
+        <p class="b-desc">Teaching machines to read, write, and understand human language. Evolved from rules and grammars → statistical models → word embeddings → Transformers and LLMs that generate fluent text across all languages.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-rose">Language</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1954</span>Georgetown MT experiment</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2013</span>Word2Vec — neural word embeddings</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2018</span>BERT — bidirectional transformers</div>
+        </div>
+      </div>
+
+      <!-- 6. Computer Vision -->
+      <div class="b-card animate-in" data-delay="5" data-category="perception" style="--accent-color: var(--amber);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,179,0,0.08);">👁️</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1966 — MIT Summer Vision</div>
+            <div class="b-name">Computer Vision</div>
+          </div>
+        </div>
+        <p class="b-desc">Enabling machines to see and understand images and video. From edge detection and Hough transforms to CNNs, object detection (YOLO, Faster R-CNN), semantic segmentation, and diffusion-based image synthesis.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-amber">Perception</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1966</span>MIT Summer Vision Project</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1989</span>LeNet — first practical CNN</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2012</span>AlexNet revolutionises vision</div>
+        </div>
+      </div>
+
+      <!-- 7. Reinforcement Learning -->
+      <div class="b-card animate-in" data-delay="6" data-category="learning" style="--accent-color: var(--rose);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,75,110,0.08);">🎮</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1950s — Bellman/Samuel</div>
+            <div class="b-name">Reinforcement Learning</div>
+          </div>
+        </div>
+        <p class="b-desc">Agents learn optimal behaviour through trial-and-error interaction with an environment, maximising cumulative reward. From Samuel's checkers (1959) to AlphaGo (2016) to ChatGPT's RLHF training (2022).</p>
+        <div class="timeline-tags">
+          <span class="tag tag-rose">Learning</span>
+          <span class="tag tag-violet">Action</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1990</span>TD-Gammon master backgammon</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2013</span>DQN — Atari from pixels</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2016</span>AlphaGo defeats world champion</div>
+        </div>
+      </div>
+
+      <!-- 8. Robotics -->
+      <div class="b-card animate-in" data-delay="7" data-category="action" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.08);">🦾</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1961 — Unimate</div>
+            <div class="b-name">Robotics &amp; Autonomous Systems</div>
+          </div>
+        </div>
+        <p class="b-desc">Physical AI systems that perceive and act in the real world. Combines vision, planning, manipulation, and locomotion. From factory arms to autonomous vehicles, Boston Dynamics, and humanoid robots.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Action</span>
+          <span class="tag tag-amber">Perception</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1961</span>Unimate — GM factory robot</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2005</span>Stanley wins DARPA Grand Challenge</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2021</span>Boston Dynamics Atlas parkour</div>
+        </div>
+      </div>
+
+      <!-- 9. Expert Systems -->
+      <div class="b-card animate-in" data-delay="8" data-category="reasoning" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.08);">📋</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1965 — DENDRAL</div>
+            <div class="b-name">Expert Systems</div>
+          </div>
+        </div>
+        <p class="b-desc">Knowledge-based programs that emulate the decision-making of human experts using IF-THEN rules and inference engines. Commercially dominant in the 1980s. Evolved into knowledge graphs and Bayesian networks.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Reasoning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1965</span>DENDRAL — chemistry</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1972</span>MYCIN — medical diagnosis</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1982</span>XCON saves DEC $40M/year</div>
+        </div>
+      </div>
+
+      <!-- 10. Speech Recognition -->
+      <div class="b-card animate-in" data-delay="9" data-category="perception" style="--accent-color: var(--cyan);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(0,229,255,0.08);">🎤</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1952 — Bell Labs Audrey</div>
+            <div class="b-name">Speech Recognition &amp; Synthesis</div>
+          </div>
+        </div>
+        <p class="b-desc">Converting spoken language to text (ASR) and text to speech (TTS). From rule-based phoneme models to HMMs to deep learning approaches used by Alexa, Siri, Google Assistant, and Whisper.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-cyan">Perception</span>
+          <span class="tag tag-rose">Language</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1952</span>Bell Labs "Audrey" — digits only</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1987</span>Dragon Dictate commercial product</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2022</span>OpenAI Whisper — multilingual</div>
+        </div>
+      </div>
+
+      <!-- 11. Generative AI -->
+      <div class="b-card animate-in" data-delay="10" data-category="generation" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.08);">✨</div>
+          <div class="b-meta">
+            <div class="b-year">Born 2014 — GANs</div>
+            <div class="b-name">Generative AI</div>
+          </div>
+        </div>
+        <p class="b-desc">Models that create new content — images, text, audio, video, code, 3D. Includes GANs, VAEs, diffusion models, and autoregressive LLMs. The fastest growing AI subfield 2020–present.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Generation</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2014</span>GANs — Goodfellow et al.</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2021</span>DALL-E — text-to-image</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2022</span>Stable Diffusion open-sourced</div>
+        </div>
+      </div>
+
+      <!-- 12. Large Language Models -->
+      <div class="b-card animate-in" data-delay="11" data-category="language generation" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.1);">💬</div>
+          <div class="b-meta">
+            <div class="b-year">Born 2018 — GPT / BERT</div>
+            <div class="b-name">Large Language Models</div>
+          </div>
+        </div>
+        <p class="b-desc">Massive transformer models trained on internet-scale text. The central technology of the 2020s AI wave. GPT-3/4, Claude, Gemini, Llama, and others demonstrate emergent reasoning, coding, and creative capabilities.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Language</span>
+          <span class="tag tag-violet">Generation</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2018</span>GPT-1 and BERT</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2020</span>GPT-3 — 175B parameters</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2022</span>ChatGPT — mainstream AI</div>
+        </div>
+      </div>
+
+      <!-- 13. Knowledge Representation -->
+      <div class="b-card animate-in" data-delay="12" data-category="reasoning" style="--accent-color: var(--amber);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,179,0,0.08);">🗺️</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1960s — Semantic Networks</div>
+            <div class="b-name">Knowledge Representation</div>
+          </div>
+        </div>
+        <p class="b-desc">Encoding world knowledge in machine-readable form. From semantic networks and frames to ontologies (OWL, RDF), knowledge graphs (Google, Wikidata), and neural knowledge stores.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-amber">Reasoning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1969</span>Semantic networks — Quillian</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1984</span>CYC project — common sense</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2012</span>Google Knowledge Graph</div>
+        </div>
+      </div>
+
+      <!-- 14. Planning & Search -->
+      <div class="b-card animate-in" data-delay="13" data-category="reasoning action" style="--accent-color: var(--cyan);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(0,229,255,0.08);">🔍</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1957 — GPS</div>
+            <div class="b-name">Planning &amp; Search</div>
+          </div>
+        </div>
+        <p class="b-desc">Algorithms that find solutions by exploring state spaces. A* search, MCTS, SAT solvers, STRIPS planning. Core to game AI, route planning, logistics optimisation, and robotic task planning.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-cyan">Reasoning</span>
+          <span class="tag tag-violet">Action</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1957</span>GPS — means-ends analysis</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1968</span>A* search algorithm</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1997</span>Deep Blue — minimax search</div>
+        </div>
+      </div>
+
+      <!-- 15. Multi-Agent Systems -->
+      <div class="b-card animate-in" data-delay="14" data-category="action reasoning" style="--accent-color: var(--phosphor);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(57,255,20,0.06);">🐝</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1980s — Distributed AI</div>
+            <div class="b-name">Multi-Agent Systems</div>
+          </div>
+        </div>
+        <p class="b-desc">Multiple AI agents interacting, cooperating, or competing to achieve goals. Applications in simulation, markets, autonomous fleets, and the emerging field of "AI agentic frameworks" (AutoGPT, CrewAI, LangGraph).</p>
+        <div class="timeline-tags">
+          <span class="tag tag-green">Action</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1987</span>Brooks — subsumption architecture</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2004</span>RoboCup — multi-agent soccer</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2023</span>GPT-4 powered AI agents</div>
+        </div>
+      </div>
+
+      <!-- 16. Bayesian AI -->
+      <div class="b-card animate-in" data-delay="15" data-category="reasoning learning" style="--accent-color: var(--amber);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,179,0,0.08);">📊</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1763 — Thomas Bayes</div>
+            <div class="b-name">Probabilistic &amp; Bayesian AI</div>
+          </div>
+        </div>
+        <p class="b-desc">Reasoning under uncertainty using probability theory and Bayesian inference. Bayesian networks, hidden Markov models, Gaussian processes. Foundation of many ML algorithms and the brain's cognitive framework.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-amber">Reasoning</span>
+          <span class="tag tag-green">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1988</span>Judea Pearl — Bayesian networks</div>
+          <div class="b-milestone-item"><span class="b-mile-year">1997</span>HMMs dominate speech recognition</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2001</span>Bayesian spam filters</div>
+        </div>
+      </div>
+
+      <!-- 17. Evolutionary Computation -->
+      <div class="b-card animate-in" data-delay="16" data-category="learning" style="--accent-color: var(--phosphor);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(57,255,20,0.06);">🧬</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1950s — Holland</div>
+            <div class="b-name">Evolutionary Computation</div>
+          </div>
+        </div>
+        <p class="b-desc">Optimisation algorithms inspired by biological evolution: genetic algorithms, evolutionary strategies, neuroevolution. Used in engineering design, neural architecture search, and game AI (OpenAI Five used ES).</p>
+        <div class="timeline-tags">
+          <span class="tag tag-green">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1960</span>Genetic algorithms — Holland</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2017</span>OpenAI Evolution Strategies</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2019</span>NEAT neuroevolution</div>
+        </div>
+      </div>
+
+      <!-- 18. AI Safety & Alignment -->
+      <div class="b-card animate-in" data-delay="17" data-category="reasoning" style="--accent-color: var(--rose);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,75,110,0.06);">🛡️</div>
+          <div class="b-meta">
+            <div class="b-year">Born 2000s — Bostrom / MIRI</div>
+            <div class="b-name">AI Safety &amp; Alignment</div>
+          </div>
+        </div>
+        <p class="b-desc">Ensuring AI systems are safe, beneficial, and aligned with human values. Covers interpretability, robustness, RLHF, Constitutional AI, red-teaming, and long-term existential risk research. Fastest-growing AI research area 2020–present.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-rose">Safety</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2014</span>Nick Bostrom: "Superintelligence"</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2017</span>Anthropic / OpenAI safety teams</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2022</span>RLHF — ChatGPT alignment</div>
+        </div>
+      </div>
+
+      <!-- 19. Multimodal AI -->
+      <div class="b-card animate-in" data-delay="18" data-category="perception generation language" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.08);">🌐</div>
+          <div class="b-meta">
+            <div class="b-year">Born 2021 — CLIP / DALL-E</div>
+            <div class="b-name">Multimodal AI</div>
+          </div>
+        </div>
+        <p class="b-desc">AI systems that understand and generate across multiple modalities: text, images, audio, video, and code. GPT-4V, Gemini Ultra, Claude 3, LLaVA, and Sora represent the current frontier of multimodal intelligence.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Generation</span>
+          <span class="tag tag-amber">Perception</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2021</span>CLIP + DALL-E launch</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2023</span>GPT-4 Vision released</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2024</span>Sora — video generation</div>
+        </div>
+      </div>
+
+      <!-- 20. AI in Science -->
+      <div class="b-card animate-in" data-delay="19" data-category="learning reasoning" style="--accent-color: var(--phosphor);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(57,255,20,0.06);">🔬</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1980s — DENDRAL, later AlphaFold</div>
+            <div class="b-name">AI for Science</div>
+          </div>
+        </div>
+        <p class="b-desc">Applying AI to accelerate scientific discovery. AlphaFold solved protein folding; ML models accelerate drug discovery, materials science, climate modelling, particle physics, and mathematics.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-green">Science</span>
+          <span class="tag tag-green">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2020</span>AlphaFold 1 — protein structures</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2021</span>AlphaFold 2 — all known proteins</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2023</span>AI discovers new antibiotics</div>
+        </div>
+      </div>
+
+      <!-- 21. AI Ethics -->
+      <div class="b-card animate-in" data-delay="20" data-category="reasoning" style="--accent-color: var(--rose);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,75,110,0.06);">⚖️</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1980s, formalised 2010s</div>
+            <div class="b-name">AI Ethics &amp; Fairness</div>
+          </div>
+        </div>
+        <p class="b-desc">Studying and mitigating bias, discrimination, and social harms in AI systems. Covers fairness metrics, privacy, transparency, explainability, and the societal impact of automated decision-making at scale.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-rose">Ethics</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2016</span>ProPublica COMPAS bias report</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2018</span>Timnit Gebru — facial recognition bias</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2023</span>EU AI Act — first major AI law</div>
+        </div>
+      </div>
+
+      <!-- 22. Neuromorphic Computing -->
+      <div class="b-card animate-in" data-delay="21" data-category="learning perception" style="--accent-color: var(--cyan);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(0,229,255,0.06);">💡</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1980s — Carver Mead</div>
+            <div class="b-name">Neuromorphic Computing</div>
+          </div>
+        </div>
+        <p class="b-desc">Hardware architectures that mimic the brain's neural structure for ultra-low-power AI. Intel's Loihi, IBM's TrueNorth, and SpiNNaker implement spiking neural networks in silicon for edge AI applications.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-cyan">Hardware</span>
+          <span class="tag tag-cyan">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1989</span>Carver Mead coins "neuromorphic"</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2014</span>IBM TrueNorth — 1M neurons</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2018</span>Intel Loihi — spiking NN chip</div>
+        </div>
+      </div>
+
+      <!-- 23. AI in Healthcare -->
+      <div class="b-card animate-in" data-delay="22" data-category="perception learning" style="--accent-color: var(--rose);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(255,75,110,0.06);">🏥</div>
+          <div class="b-meta">
+            <div class="b-year">Born 1972 — MYCIN</div>
+            <div class="b-name">AI in Healthcare</div>
+          </div>
+        </div>
+        <p class="b-desc">Medical diagnosis, drug discovery, medical imaging, genomics, and patient monitoring. AI now matches radiologists on chest X-ray diagnosis and ophthalmologists on diabetic retinopathy screening.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-rose">Applied</span>
+          <span class="tag tag-amber">Perception</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">1972</span>MYCIN diagnostic system</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2016</span>Google AI beats radiologists</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2021</span>AlphaFold + drug discovery</div>
+        </div>
+      </div>
+
+      <!-- 24. Quantum AI -->
+      <div class="b-card animate-in" data-delay="23" data-category="learning reasoning" style="--accent-color: var(--violet);">
+        <div class="b-head">
+          <div class="b-icon" style="background:rgba(155,89,255,0.06);">⚛️</div>
+          <div class="b-meta">
+            <div class="b-year">Emerging — 2010s onwards</div>
+            <div class="b-name">Quantum Machine Learning</div>
+          </div>
+        </div>
+        <p class="b-desc">Leveraging quantum computing to accelerate or enhance machine learning algorithms. Quantum neural networks, variational quantum circuits, and quantum annealing for optimisation problems. Currently pre-commercial but intensely researched.</p>
+        <div class="timeline-tags">
+          <span class="tag tag-violet">Emerging</span>
+          <span class="tag tag-green">Learning</span>
+        </div>
+        <div class="b-milestones">
+          <div class="b-milestone-item"><span class="b-mile-year">2013</span>D-Wave quantum annealer</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2019</span>Google quantum supremacy claim</div>
+          <div class="b-milestone-item"><span class="b-mile-year">2023</span>IBM 1000-qubit Condor chip</div>
+        </div>
+      </div>
+
+    </div><!-- end branches-grid -->
+  </div>
+
+</div><!-- end page-wrap -->
+
+<footer class="footer">
+  <div class="footer-brand">AI<span>History</span></div>
+  <p class="footer-copy">AI HISTORY © 2024 — 24 Branches of Artificial Intelligence</p>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+// Branch filter
+window.AI.initFilters({
+  searchId: 'branchSearch',
+  chipsSelector: '.chip',
+  itemsSelector: '.b-card',
+  textSelector: '.b-name, .b-desc',
+  tagSelector: '.tag',
+});
+
+// Tree canvas
+(function() {
+  const canvas = document.getElementById('treeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width  = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+
+  const branches = [
+    { label: 'Symbolic AI', x: 0.15, y: 0.25, color: '#9b59ff' },
+    { label: 'Neural Nets', x: 0.5, y: 0.1, color: '#00e5ff' },
+    { label: 'Machine Learning', x: 0.85, y: 0.2, color: '#39ff14' },
+    { label: 'NLP', x: 0.15, y: 0.55, color: '#ff4b6e' },
+    { label: 'Computer Vision', x: 0.35, y: 0.7, color: '#ffb300' },
+    { label: 'Reinforcement L.', x: 0.65, y: 0.65, color: '#ff4b6e' },
+    { label: 'Robotics', x: 0.85, y: 0.55, color: '#9b59ff' },
+    { label: 'Deep Learning', x: 0.5, y: 0.45, color: '#00e5ff' },
+    { label: 'Gen AI', x: 0.3, y: 0.35, color: '#9b59ff' },
+    { label: 'LLMs', x: 0.7, y: 0.35, color: '#9b59ff' },
+  ];
+
+  const root = { x: 0.5, y: 0.9 };
+
+  let t = 0;
+  (function draw() {
+    t += 0.008;
+    ctx.clearRect(0, 0, W, H);
+
+    // draw edges
+    branches.forEach(b => {
+      const bx = b.x * W, by = b.y * H;
+      const rx = root.x * W, ry = root.y * H;
+      const grad = ctx.createLinearGradient(rx, ry, bx, by);
+      grad.addColorStop(0, 'rgba(0,229,255,0.08)');
+      grad.addColorStop(1, b.color + '44');
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.quadraticCurveTo((rx + bx) / 2, ry - 30, bx, by);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // draw root
+    ctx.beginPath();
+    ctx.arc(root.x * W, root.y * H, 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#00e5ff';
+    ctx.shadowBlur = 20; ctx.shadowColor = '#00e5ff';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0,229,255,0.8)';
+    ctx.font = '700 10px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('1943', root.x * W, root.y * H + 24);
+
+    // draw branch nodes
+    branches.forEach(b => {
+      const bx = b.x * W, by = b.y * H;
+      const glow = 0.7 + Math.sin(t + b.x * 5) * 0.3;
+      ctx.beginPath();
+      ctx.arc(bx, by, 6, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.shadowBlur = 14 * glow; ctx.shadowColor = b.color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#c8d8f0';
+      ctx.font = '600 9px IBM Plex Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, bx, by - 12);
+    });
+
+    requestAnimationFrame(draw);
+  })();
+})();
+</script>
+</body>
+</html>

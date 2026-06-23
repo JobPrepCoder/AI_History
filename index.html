@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI History — From 1943 to the Future</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* Page-specific additions */
+    .decade-strip {
+      display: flex; overflow-x: auto; gap: 0.75rem;
+      padding-bottom: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--rim) transparent;
+    }
+    .decade-pill {
+      flex-shrink: 0;
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: 6px;
+      padding: 0.85rem 1.5rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+      min-width: 120px;
+    }
+    .decade-pill:hover, .decade-pill.active {
+      border-color: var(--cyan);
+      background: rgba(0,229,255,0.06);
+    }
+    .decade-pill .dy {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--cyan);
+      letter-spacing: -0.02em;
+    }
+    .decade-pill .dc {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 1.25rem;
+    }
+    .highlight-card {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: all var(--transition);
+    }
+    .highlight-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--cyan-dim);
+    }
+    .highlight-card.featured {
+      grid-row: span 2;
+      background: linear-gradient(135deg, var(--panel) 0%, var(--surface) 100%);
+    }
+    .highlight-card.featured::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+    }
+    .h-year {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--amber);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    .h-title {
+      font-family: var(--font-display);
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+    .h-title.lg { font-size: 1.6rem; line-height: 1.1; }
+    .h-title.md { font-size: 1.1rem; }
+    .h-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.55; }
+    .h-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    /* scan line effect on hero */
+    .scan-overlay {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(transparent 50%, rgba(0,229,255,0.01) 50%);
+      background-size: 100% 4px;
+      border-radius: var(--r-lg);
+      animation: scanline 4s linear infinite;
+    }
+    @keyframes scanline {
+      from { background-position: 0 0; }
+      to   { background-position: 0 100%; }
+    }
+    .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--phosphor);
+      margin-right: 0.4rem;
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100%{ opacity:1; transform: scale(1); }
+      50%    { opacity:0.3; transform: scale(0.7); }
+    }
+    @media (max-width: 900px) {
+      .highlight-grid { grid-template-columns: 1fr 1fr; }
+      .highlight-card.featured { grid-row: auto; grid-column: span 2; }
+    }
+    @media (max-width: 600px) {
+      .highlight-grid { grid-template-columns: 1fr; }
+      .highlight-card.featured { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="index.html">AI<span>History</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="timeline.html">Timeline</a>
+    <a href="branches.html">Branches</a>
+    <a href="pioneers.html">Pioneers</a>
+    <a href="milestones.html">Milestones</a>
+    <a href="explorer.html">Explorer</a>
+  </div>
+  <div class="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+<div class="nav-mobile">
+  <a href="index.html">Home</a>
+  <a href="timeline.html">Timeline</a>
+  <a href="branches.html">Branches</a>
+  <a href="pioneers.html">Pioneers</a>
+  <a href="milestones.html">Milestones</a>
+  <a href="explorer.html">Explorer</a>
+</div>
+
+<div class="page-wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-eyebrow">
+            <span class="live-dot"></span>
+            Origins&nbsp;1943 → Present
+          </div>
+          <h1 class="hero-title">
+            The Complete<br>
+            History of<br>
+            <span class="accent glow-cyan">Artificial</span><br>
+            <span class="year">Intelligence</span>
+          </h1>
+          <p class="hero-desc">
+            From McCulloch &amp; Pitts' first neural model in 1943 through the 
+            deep-learning revolution — explore every decade, discipline, 
+            and breakthrough that built the AI age.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="timeline.html">Explore Timeline →</a>
+            <a class="btn btn-outline" href="branches.html">View Branches</a>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="neural-canvas-wrap">
+            <canvas id="neural-canvas"></canvas>
+            <div class="scan-overlay"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAT BAR -->
+  <div class="container">
+    <div class="stat-bar animate-in">
+      <div class="stat-item">
+        <div class="stat-num" data-count="80" data-suffix="+">0+</div>
+        <div class="stat-label">Years of AI</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-count="24" data-suffix="">0</div>
+        <div class="stat-label">Major Branches</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-count="150" data-suffix="+">0+</div>
+        <div class="stat-label">Milestones</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" data-count="60" data-suffix="+">0+</div>
+        <div class="stat-label">Key Pioneers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECADE QUICK-NAV -->
+  <section class="section-sm">
+    <div class="container">
+      <div class="sec-head animate-in">
+        <div class="sec-eyebrow">Navigate by era</div>
+        <h2 class="sec-title">Eight Decades of <span class="accent">Breakthroughs</span></h2>
+      </div>
+      <div class="decade-strip">
+        <div class="decade-pill active" onclick="location='timeline.html#1940s'">
+          <div class="dy">1940s</div><div class="dc">The Birth</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#1950s'">
+          <div class="dy">1950s</div><div class="dc">Turing's Vision</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#1960s'">
+          <div class="dy">1960s</div><div class="dc">First Systems</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#1970s'">
+          <div class="dy">1970s</div><div class="dc">AI Winter I</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#1980s'">
+          <div class="dy">1980s</div><div class="dc">Expert Systems</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#1990s'">
+          <div class="dy">1990s</div><div class="dc">AI Winter II</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#2000s'">
+          <div class="dy">2000s</div><div class="dc">Data Age</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#2010s'">
+          <div class="dy">2010s</div><div class="dc">Deep Learning</div>
+        </div>
+        <div class="decade-pill" onclick="location='timeline.html#2020s'">
+          <div class="dy">2020s</div><div class="dc">The LLM Era</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHTED MOMENTS -->
+  <section class="section">
+    <div class="container">
+      <div class="sec-head animate-in">
+        <div class="sec-eyebrow">Defining moments</div>
+        <h2 class="sec-title">Landmark <span class="accent">Achievements</span></h2>
+        <p class="sec-sub">The pivotal events that permanently altered the course of artificial intelligence.</p>
+      </div>
+
+      <div class="highlight-grid">
+        <!-- Featured -->
+        <div class="highlight-card featured animate-in">
+          <div class="h-icon">🧠</div>
+          <div class="h-year">1943 — The Origin</div>
+          <div class="h-title lg">The First Neural Network Model</div>
+          <p class="h-desc" style="margin-bottom:1rem;">
+            Warren McCulloch (neuroscientist) and Walter Pitts (logician) published 
+            "A Logical Calculus of the Ideas Immanent in Nervous Activity" — 
+            proposing that neurons could be modelled as simple binary logic gates. 
+            This paper is widely regarded as the founding document of both 
+            neural network theory and computational neuroscience.
+          </p>
+          <p class="h-desc">
+            Their model showed that networks of artificial neurons could compute 
+            any logical or arithmetic function — a concept that would evolve over 
+            80 years into today's billion-parameter models.
+          </p>
+          <div style="margin-top:1.25rem;">
+            <span class="tag tag-cyan">Neural Networks</span>
+            <span class="tag tag-violet">Foundational</span>
+            <span class="tag tag-amber">1943</span>
+          </div>
+        </div>
+
+        <div class="highlight-card animate-in" data-delay="2">
+          <div class="h-year">1950</div>
+          <div class="h-title md">The Turing Test</div>
+          <p class="h-desc">Alan Turing proposes "Can Machines Think?" introducing the imitation game — the first formal definition of machine intelligence.</p>
+        </div>
+
+        <div class="highlight-card animate-in" data-delay="3">
+          <div class="h-year">1956</div>
+          <div class="h-title md">The Dartmouth Conference</div>
+          <p class="h-desc">McCarthy, Minsky, Shannon and 6 others coin the term "Artificial Intelligence" — officially founding it as a field of study.</p>
+        </div>
+
+        <div class="highlight-card animate-in" data-delay="4">
+          <div class="h-year">1997</div>
+          <div class="h-title md">Deep Blue Defeats Kasparov</div>
+          <p class="h-desc">IBM's chess computer becomes the first machine to beat a reigning world champion under standard tournament conditions.</p>
+        </div>
+
+        <div class="highlight-card animate-in" data-delay="5">
+          <div class="h-year">2012</div>
+          <div class="h-title md">AlexNet & Deep Learning</div>
+          <p class="h-desc">Krizhevsky's CNN wins ImageNet by a landmark margin — igniting the modern deep learning revolution.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BRANCH PREVIEW -->
+  <section class="section" style="background: var(--deep); position:relative;z-index:1;">
+    <div class="container">
+      <div class="sec-head animate-in">
+        <div class="sec-eyebrow">Taxonomy</div>
+        <h2 class="sec-title">Major <span class="accent">Branches</span> of AI</h2>
+        <p class="sec-sub">AI has grown into a vast tree. Each branch has its own history, methods, and milestones.</p>
+      </div>
+      <div class="branch-grid">
+        <div class="branch-card cyan-accent animate-in" data-delay="0" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(0,229,255,0.1);">🤖</div>
+          <div class="branch-born">Born&nbsp;1956</div>
+          <div class="branch-name">Symbolic AI</div>
+          <p class="branch-desc">Logic, rules, and explicit knowledge representation. The original AI paradigm that dominated through the 1980s.</p>
+        </div>
+        <div class="branch-card green-accent animate-in" data-delay="1" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(57,255,20,0.1);">🧬</div>
+          <div class="branch-born">Born&nbsp;1943</div>
+          <div class="branch-name">Neural Networks</div>
+          <p class="branch-desc">Brain-inspired models. From McCulloch-Pitts to the perceptron, backprop, CNNs and today's LLMs.</p>
+        </div>
+        <div class="branch-card amber-accent animate-in" data-delay="2" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(255,179,0,0.1);">🎯</div>
+          <div class="branch-born">Born&nbsp;1959</div>
+          <div class="branch-name">Machine Learning</div>
+          <p class="branch-desc">Systems that learn from data. Arthur Samuel coined the term; it now underpins virtually all modern AI.</p>
+        </div>
+        <div class="branch-card violet-accent animate-in" data-delay="3" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(155,89,255,0.1);">🗣️</div>
+          <div class="branch-born">Born&nbsp;1954</div>
+          <div class="branch-name">NLP</div>
+          <p class="branch-desc">Teaching machines to understand human language — from Georgetown's Russian translation to GPT-4.</p>
+        </div>
+        <div class="branch-card rose-accent animate-in" data-delay="4" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(255,75,110,0.1);">👁️</div>
+          <div class="branch-born">Born&nbsp;1966</div>
+          <div class="branch-name">Computer Vision</div>
+          <p class="branch-desc">Machine perception of visual data — from edge detection to the ImageNet revolution and diffusion models.</p>
+        </div>
+        <div class="branch-card cyan-accent animate-in" data-delay="5" onclick="location='branches.html'">
+          <div class="branch-icon" style="background:rgba(0,229,255,0.1);">🎮</div>
+          <div class="branch-born">Born&nbsp;1950</div>
+          <div class="branch-name">Reinforcement Learning</div>
+          <p class="branch-desc">Learning through reward and punishment. From checkers-playing programs to AlphaGo's superhuman play.</p>
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:2.5rem;">
+        <a class="btn btn-outline" href="branches.html">View All 24 Branches →</a>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end page-wrap -->
+
+<footer class="footer">
+  <div class="footer-brand">AI<span>History</span></div>
+  <p style="font-size:0.85rem;color:var(--muted);margin-top:0.5rem;">A comprehensive visual encyclopedia of Artificial Intelligence</p>
+  <div style="display:flex;justify-content:center;gap:1.5rem;margin-top:1.5rem;">
+    <a href="index.html" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Home</a>
+    <a href="timeline.html" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Timeline</a>
+    <a href="branches.html" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Branches</a>
+    <a href="pioneers.html" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Pioneers</a>
+    <a href="milestones.html" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;">Milestones</a>
+  </div>
+  <p class="footer-copy">AI HISTORY © 2024 — Built with knowledge &amp; code</p>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

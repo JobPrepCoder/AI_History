@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Explorer — AI History</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .explorer-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      min-height: calc(100vh - 200px);
+    }
+    .explorer-sidebar {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .explorer-main {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+
+    /* Chat panel */
+    .chat-panel {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      display: flex; flex-direction: column;
+      height: 580px;
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--rim);
+      display: flex; align-items: center; gap: .75rem;
+    }
+    .chat-header-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--phosphor);
+      animation: pulse 1.4s ease infinite;
+    }
+    .chat-header-title {
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .chat-messages {
+      flex: 1; overflow-y: auto;
+      padding: 1.25rem;
+      display: flex; flex-direction: column; gap: 1rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--rim) transparent;
+    }
+    .msg {
+      max-width: 85%;
+      padding: .85rem 1.1rem;
+      border-radius: 12px;
+      font-size: .86rem;
+      line-height: 1.65;
+    }
+    .msg-user {
+      align-self: flex-end;
+      background: rgba(0,229,255,.1);
+      border: 1px solid rgba(0,229,255,.2);
+      color: var(--white);
+    }
+    .msg-ai {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--rim);
+      color: var(--text);
+    }
+    .msg-ai .msg-label {
+      font-family: var(--font-mono);
+      font-size: .58rem;
+      color: var(--cyan);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: .4rem;
+    }
+    .msg-typing {
+      display: flex; gap: 4px; align-items: center;
+      padding: .75rem 1rem;
+    }
+    .typing-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: typingBounce .9s ease infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: .15s; }
+    .typing-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes typingBounce {
+      0%,80%,100% { transform: translateY(0); opacity:.4; }
+      40%          { transform: translateY(-6px); opacity:1; }
+    }
+    .chat-input-row {
+      padding: 1rem;
+      border-top: 1px solid var(--rim);
+      display: flex; gap: .6rem;
+    }
+    .chat-input {
+      flex: 1;
+      background: var(--deep);
+      border: 1px solid var(--rim);
+      border-radius: 6px;
+      padding: .65rem .9rem;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: .85rem;
+      outline: none;
+      resize: none;
+      height: 42px;
+      max-height: 120px;
+      overflow-y: auto;
+      transition: border-color var(--transition);
+    }
+    .chat-input:focus { border-color: var(--cyan); }
+    .chat-send {
+      background: var(--cyan);
+      border: none;
+      border-radius: 6px;
+      width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--cosmos);
+      font-size: 1.1rem;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .chat-send:hover { background: var(--white); transform: scale(1.05); }
+    .chat-send:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Quick prompts */
+    .quick-prompts {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.25rem;
+    }
+    .quick-prompts h4 {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    .qp-list { display: flex; flex-direction: column; gap: .4rem; }
+    .qp-btn {
+      background: var(--deep);
+      border: 1px solid var(--rim);
+      border-radius: 6px;
+      padding: .6rem .85rem;
+      color: var(--text);
+      font-size: .8rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all var(--transition);
+      line-height: 1.4;
+    }
+    .qp-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0,229,255,.04);
+    }
+
+    /* AI topic cards */
+    .topic-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .75rem;
+    }
+    .topic-chip {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r);
+      padding: .85rem 1rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .topic-chip:hover {
+      border-color: var(--cyan-dim);
+      background: var(--surface);
+      transform: translateY(-2px);
+    }
+    .topic-chip-icon { font-size: 1.2rem; }
+    .topic-chip-label {
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Concept map */
+    .concept-panel {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+    }
+    .concept-panel h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--white);
+      margin-bottom: 1rem;
+    }
+    #conceptCanvas {
+      width: 100%;
+      height: 260px;
+      border-radius: var(--r);
+      background: var(--deep);
+      border: 1px solid var(--rim);
+    }
+
+    /* Info panel */
+    .info-panel {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+    }
+    .info-panel h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--white);
+      margin-bottom: .75rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .info-panel h3 span { font-size: 1.2rem; }
+    .info-body { font-size: .84rem; color: var(--muted); line-height: 1.65; }
+
+    @media (max-width:960px) {
+      .explorer-layout { grid-template-columns: 1fr; }
+      .chat-panel { height: 420px; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<nav class="nav">
+  <a class="nav-brand" href="index.html">AI<span>History</span></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="timeline.html">Timeline</a>
+    <a href="branches.html">Branches</a>
+    <a href="pioneers.html">Pioneers</a>
+    <a href="milestones.html">Milestones</a>
+    <a href="explorer.html" class="active">Explorer</a>
+  </div>
+  <div class="nav-hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="nav-mobile">
+  <a href="index.html">Home</a><a href="timeline.html">Timeline</a>
+  <a href="branches.html">Branches</a><a href="pioneers.html">Pioneers</a>
+  <a href="milestones.html">Milestones</a><a href="explorer.html">Explorer</a>
+</div>
+
+<div class="page-wrap">
+
+  <div style="padding:4rem 0 2rem;background:linear-gradient(to bottom,var(--deep),var(--cosmos));">
+    <div class="container">
+      <div class="sec-eyebrow">AI-Powered Learning</div>
+      <h1 class="sec-title" style="font-size:clamp(2rem,4vw,3.2rem);margin-bottom:.75rem;">
+        AI History <span class="accent">Explorer</span>
+      </h1>
+      <p style="color:var(--muted);max-width:58ch;">
+        Ask anything about AI history — concepts, people, events, breakthroughs — 
+        and get instant, detailed answers powered by Claude.
+      </p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2.5rem;padding-bottom:5rem;">
+
+    <!-- TOPIC CHIPS -->
+    <div style="margin-bottom:2rem;" class="animate-in">
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem;">Explore a topic</div>
+      <div class="topic-grid">
+        <div class="topic-chip" onclick="askTopic('Explain the history of neural networks from 1943 to today')">
+          <span class="topic-chip-icon">🧠</span><span class="topic-chip-label">Neural Networks</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('What caused the two AI Winters and what ended them?')">
+          <span class="topic-chip-icon">❄️</span><span class="topic-chip-label">AI Winters</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('Explain the Transformer architecture and why it was revolutionary')">
+          <span class="topic-chip-icon">⚡</span><span class="topic-chip-label">Transformers</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('How did deep learning change computer vision from 2012 onwards?')">
+          <span class="topic-chip-icon">👁️</span><span class="topic-chip-label">Computer Vision</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('Tell me about reinforcement learning milestones from TD-Gammon to AlphaGo')">
+          <span class="topic-chip-icon">🎮</span><span class="topic-chip-label">Reinforcement Learning</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('Who are the most influential AI researchers and what did they contribute?')">
+          <span class="topic-chip-icon">👤</span><span class="topic-chip-label">Key Figures</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('Explain how large language models work and their history from GPT-1 to GPT-4')">
+          <span class="topic-chip-icon">💬</span><span class="topic-chip-label">LLMs</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('What is the history of AI safety and alignment as a research field?')">
+          <span class="topic-chip-icon">🛡️</span><span class="topic-chip-label">AI Safety</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('Explain generative AI: GANs, VAEs, diffusion models and their history')">
+          <span class="topic-chip-icon">✨</span><span class="topic-chip-label">Generative AI</span>
+        </div>
+        <div class="topic-chip" onclick="askTopic('What happened at the 1956 Dartmouth Conference and why does it matter?')">
+          <span class="topic-chip-icon">🏫</span><span class="topic-chip-label">Dartmouth 1956</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="explorer-layout">
+
+      <!-- SIDEBAR -->
+      <div class="explorer-sidebar">
+
+        <!-- Quick prompts -->
+        <div class="quick-prompts animate-in">
+          <h4>Quick questions</h4>
+          <div class="qp-list">
+            <button class="qp-btn" onclick="askTopic('What did Alan Turing contribute to AI?')">🔐 Alan Turing's contributions</button>
+            <button class="qp-btn" onclick="askTopic('Explain backpropagation in simple terms')">🔄 How does backpropagation work?</button>
+            <button class="qp-btn" onclick="askTopic('What is the difference between supervised, unsupervised and reinforcement learning?')">📊 Types of machine learning</button>
+            <button class="qp-btn" onclick="askTopic('How did AlphaGo defeat Lee Sedol and why was it significant?')">♟️ AlphaGo vs Lee Sedol</button>
+            <button class="qp-btn" onclick="askTopic('What is the Turing Test and has any AI passed it?')">🤖 The Turing Test explained</button>
+            <button class="qp-btn" onclick="askTopic('Explain the history of NLP from rule-based systems to ChatGPT')">🗣️ NLP history overview</button>
+            <button class="qp-btn" onclick="askTopic('What are the key differences between symbolic AI and neural AI?')">⚖️ Symbolic vs Neural AI</button>
+            <button class="qp-btn" onclick="askTopic('When did AI start beating humans at different tasks? Give a timeline.')">🏆 Human vs AI milestones</button>
+          </div>
+        </div>
+
+        <!-- Info panel -->
+        <div class="info-panel animate-in">
+          <h3><span>💡</span> About This Explorer</h3>
+          <p class="info-body">
+            Ask any question about the history, concepts, people, and technologies of Artificial Intelligence.
+            This explorer is powered by Claude — Anthropic's AI assistant — with deep knowledge of AI's 80-year history.
+          </p>
+          <br/>
+          <p class="info-body" style="font-family:var(--font-mono);font-size:.68rem;color:var(--cyan);">
+            TIP: Ask follow-up questions to go deeper on any topic.
+          </p>
+        </div>
+
+      </div><!-- end sidebar -->
+
+      <!-- MAIN -->
+      <div class="explorer-main">
+
+        <!-- Chat -->
+        <div class="chat-panel animate-in">
+          <div class="chat-header">
+            <div class="chat-header-dot"></div>
+            <div class="chat-header-title">AI History Expert · Powered by Claude</div>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="msg msg-ai">
+              <div class="msg-label">AI History Expert</div>
+              Welcome! I'm your AI history guide. I can explain any concept, person, event, or technology from AI's 80-year history — from the 1943 McCulloch–Pitts neuron to today's large language models.<br><br>
+              Try asking me: <em>"What caused the deep learning revolution?"</em> or click any topic above to get started.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Ask about any AI concept, event, or person…" rows="1"></textarea>
+            <button class="chat-send" id="chatSendBtn" onclick="sendMessage()" title="Send">➤</button>
+          </div>
+        </div>
+
+        <!-- Concept visualiser -->
+        <div class="concept-panel animate-in">
+          <h3 style="display:flex;align-items:center;gap:.5rem;">
+            <span style="font-size:1.1rem;">🕸️</span> AI Concept Map
+            <span style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-left:auto;">LIVE · ANIMATED</span>
+          </h3>
+          <canvas id="conceptCanvas"></canvas>
+        </div>
+
+      </div><!-- end main -->
+    </div><!-- end explorer layout -->
+
+  </div>
+</div><!-- end page-wrap -->
+
+<footer class="footer">
+  <div class="footer-brand">AI<span>History</span></div>
+  <p class="footer-copy">AI HISTORY © 2024 — Powered by Claude · Anthropic</p>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+// ===== CONCEPT MAP CANVAS =====
+(function() {
+  const canvas = document.getElementById('conceptCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H;
+
+  const concepts = [
+    { label:'1943\nNeuron',  x:.5, y:.5, color:'#ffb300', size:22 },
+    { label:'Perceptron\n1957', x:.3, y:.3, color:'#00e5ff', size:16 },
+    { label:'Backprop\n1986', x:.7, y:.3, color:'#00e5ff', size:16 },
+    { label:'CNN\n1989', x:.15, y:.55, color:'#39ff14', size:14 },
+    { label:'LSTM\n1997', x:.5, y:.18, color:'#9b59ff', size:14 },
+    { label:'SVM\n1992', x:.82, y:.55, color:'#39ff14', size:13 },
+    { label:'AlexNet\n2012', x:.2, y:.78, color:'#ff4b6e', size:16 },
+    { label:'Transformer\n2017', x:.5, y:.78, color:'#9b59ff', size:18 },
+    { label:'GPT\n2018', x:.8, y:.78, color:'#9b59ff', size:14 },
+    { label:'AlphaGo\n2016', x:.8, y:.38, color:'#ff4b6e', size:14 },
+    { label:'ChatGPT\n2022', x:.5, y:.88, color:'#ff4b6e', size:14 },
+  ];
+
+  const edges = [
+    [0,1],[0,2],[1,2],[1,3],[2,4],[3,6],[4,7],[5,7],[6,7],[7,8],[7,10],[8,10],[2,9]
+  ];
+
+  const resize = () => {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  };
+  window.addEventListener('resize', resize);
+  resize();
+
+  let t = 0;
+  (function draw() {
+    t += 0.008;
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw edges
+    edges.forEach(([a, b]) => {
+      const na = concepts[a], nb = concepts[b];
+      const ax = na.x * W, ay = na.y * H;
+      const bx = nb.x * W, by = nb.y * H;
+      const grad = ctx.createLinearGradient(ax, ay, bx, by);
+      grad.addColorStop(0, na.color + '33');
+      grad.addColorStop(1, nb.color + '33');
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx, by);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Draw nodes
+    concepts.forEach((c, i) => {
+      const x = c.x * W, y = c.y * H;
+      const glow = 0.7 + Math.sin(t + i * 0.7) * 0.3;
+
+      // glow halo
+      ctx.beginPath();
+      ctx.arc(x, y, c.size + 4, 0, Math.PI * 2);
+      ctx.fillStyle = c.color + Math.floor(glow * 30).toString(16).padStart(2,'0');
+      ctx.fill();
+
+      // node
+      ctx.beginPath();
+      ctx.arc(x, y, c.size, 0, Math.PI * 2);
+      ctx.fillStyle = c.color + 'cc';
+      ctx.fill();
+      ctx.strokeStyle = c.color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // label
+      ctx.fillStyle = '#f0f8ff';
+      ctx.font = `600 ${Math.max(8, c.size * 0.55)}px IBM Plex Mono, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const lines = c.label.split('\n');
+      lines.forEach((l, li) => {
+        const offset = (li - (lines.length - 1) / 2) * (c.size * 0.65);
+        ctx.fillText(l, x, y + offset);
+      });
+    });
+
+    requestAnimationFrame(draw);
+  })();
+})();
+
+// ===== CHAT =====
+const SYSTEM_PROMPT = `You are an expert AI historian with encyclopaedic knowledge of the history of Artificial Intelligence from 1943 to 2024. You know every milestone, researcher, paper, algorithm, and breakthrough in AI history.
+
+When answering:
+- Be informative, engaging, and precise
+- Include specific dates, names, and technical details
+- Connect events to show how ideas evolved over time
+- Use clear structure — if listing multiple points, use short paragraphs
+- Keep answers focused and well-paced (150-300 words unless asked for more)
+- Use analogies to make complex concepts accessible
+- End with a brief "why it matters" or follow-up suggestion when appropriate
+
+You are speaking to someone learning about AI history through an interactive encyclopedia website.`;
+
+let conversationHistory = [];
+
+async function callClaude(userMessage) {
+  conversationHistory.push({ role: 'user', content: userMessage });
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: conversationHistory,
+    }),
+  });
+
+  const data = await response.json();
+  const reply = data.content?.[0]?.text || 'Sorry, I could not generate a response.';
+  conversationHistory.push({ role: 'assistant', content: reply });
+  return reply;
+}
+
+function appendMessage(role, text) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+  if (role === 'ai') {
+    div.innerHTML = `<div class="msg-label">AI History Expert</div>${text.replace(/\n/g, '<br>')}`;
+  } else {
+    div.textContent = text;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-ai';
+  div.id = 'typingIndicator';
+  div.innerHTML = `<div class="msg-label">AI History Expert</div><div class="msg-typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typingIndicator')?.remove();
+}
+
+async function sendMessage(overrideText) {
+  const input = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSendBtn');
+  const text = (overrideText || input.value).trim();
+  if (!text) return;
+
+  input.value = '';
+  sendBtn.disabled = true;
+  appendMessage('user', text);
+  showTyping();
+
+  try {
+    const reply = await callClaude(text);
+    removeTyping();
+    appendMessage('ai', reply);
+  } catch (err) {
+    removeTyping();
+    appendMessage('ai', '⚠️ Unable to connect to the AI. Please check your connection and try again.');
+    console.error(err);
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+function askTopic(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+  // Scroll to chat
+  document.querySelector('.chat-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Enter key to send
+document.getElementById('chatInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Auto-resize textarea
+document.getElementById('chatInput').addEventListener('input', function() {
+  this.style.height = '42px';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Milestones — AI History</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .ms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.1rem;
+    }
+    .ms-card {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .ms-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--ms-color, var(--cyan));
+      box-shadow: 0 12px 32px rgba(0,0,0,.4);
+    }
+    .ms-card::before {
+      content: '';
+      position: absolute; left:0; top:0; bottom:0; width:3px;
+      background: var(--ms-color, var(--cyan));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .ms-card:hover::before { opacity: 1; }
+    .ms-top { display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; }
+    .ms-year {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: .14em;
+      white-space: nowrap;
+    }
+    .ms-impact {
+      font-family: var(--font-mono);
+      font-size: .58rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .15rem .5rem;
+      border-radius: 3px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .impact-critical { color:#ff4b6e; border-color:rgba(255,75,110,.35); background:rgba(255,75,110,.06); }
+    .impact-major    { color:#ffb300; border-color:rgba(255,179,0,.35);  background:rgba(255,179,0,.06); }
+    .impact-notable  { color:#00e5ff; border-color:rgba(0,229,255,.3);   background:rgba(0,229,255,.05); }
+    .ms-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--white);
+      line-height: 1.25;
+    }
+    .ms-who {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--violet);
+      letter-spacing: .06em;
+    }
+    .ms-desc {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .ms-stats {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      padding-top: .6rem;
+      border-top: 1px solid var(--rim);
+    }
+    .ms-stat {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--muted);
+    }
+    .ms-stat strong {
+      color: var(--ms-color, var(--cyan));
+      font-weight: 700;
+    }
+
+    /* Bento hero */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: auto auto;
+      gap: 1.1rem;
+      margin-bottom: 3rem;
+    }
+    .bento-item {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+      padding: 1.5rem;
+      transition: all var(--transition);
+    }
+    .bento-item:hover { border-color: var(--cyan-dim); background: var(--surface); }
+    .bento-big { grid-column: span 2; grid-row: span 2; }
+    .bento-num {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: .5rem;
+    }
+    .bento-lbl {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .bento-desc {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: .5rem;
+      line-height: 1.5;
+    }
+
+    /* View toggle */
+    .view-toggle {
+      display: flex;
+      gap: .4rem;
+      margin-left: auto;
+    }
+    .view-btn {
+      background: var(--panel);
+      border: 1px solid var(--rim);
+      border-radius: 5px;
+      padding: .4rem .75rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .view-btn.active, .view-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      background: rgba(0,229,255,.06);
+    }
+
+    /* Table view */
+    .ms-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--rim);
+      border-radius: var(--r-lg);
+    }
+    .ms-table {
+      width: 100%; border-collapse: collapse;
+      font-size: .83rem;
+    }
+    .ms-table thead th {
+      font-family: var(--font-mono);
+      font-size: .62rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: .85rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--rim);
+      background: var(--panel);
+      white-space: nowrap;
+    }
+    .ms-table tbody tr {
+      border-bottom: 1px solid rgba(26,45,79,.5);
+      transition: background var(--transition);
+    }
+    .ms-table tbody tr:hover { background: var(--surface); }
+    .ms-table tbody tr:last-child { border-bottom: none; }
+    .ms-table td { padding: .8rem 1rem; vertical-align: top; }
+    .ms-table td:first-child {
+      font-family: var(--font-mono); font-weight:700;
+      color: var(--amber); white-space: nowrap;
+    }
+    .ms-table td:nth-child(2) { font-weight:600; color:var(--white); min-width:200px; }
+    .ms-table td:nth-child(3) { color:var(--muted); min-width:120px; font-family:var(--font-mono); font-size:.72rem; }
+    .ms-table td:nth-child(4) { color:var(--muted); max-width:360px; }
+    .hidden { display: none !important; }
+
+    @media (max-width:900px) {
+      .bento { grid-template-columns: repeat(2,1fr); }
+      .bento-big { grid-column:span 2; grid-row:auto; }
+    }
+    @media (max-width:600px) {
+      .bento { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="starfield"></canvas>
+
+<nav class="nav">
+  <a class="nav-brand" href="index.html">AI<span>History</span></a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="timeline.html">Timeline</a>
+    <a href="branches.html">Branches</a>
+    <a href="pioneers.html">Pioneers</a>
+    <a href="milestones.html" class="active">Milestones</a>
+    <a href="explorer.html">Explorer</a>
+  </div>
+  <div class="nav-hamburger"><span></span><span></span><span></span></div>
+</nav>
+<div class="nav-mobile">
+  <a href="index.html">Home</a><a href="timeline.html">Timeline</a>
+  <a href="branches.html">Branches</a><a href="pioneers.html">Pioneers</a>
+  <a href="milestones.html">Milestones</a><a href="explorer.html">Explorer</a>
+</div>
+
+<div class="page-wrap">
+
+  <div style="padding:4rem 0 2rem;background:linear-gradient(to bottom,var(--deep),var(--cosmos));">
+    <div class="container">
+      <div class="sec-eyebrow">Every breakthrough catalogued</div>
+      <h1 class="sec-title" style="font-size:clamp(2rem,4vw,3.2rem);margin-bottom:.75rem;">
+        AI <span class="accent">Milestones</span>
+      </h1>
+      <p style="color:var(--muted);max-width:58ch;">
+        150+ pivotal events — from the first neural model to the LLM era — 
+        organised by impact, domain, and decade.
+      </p>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:2.5rem;">
+
+    <!-- BENTO STATS -->
+    <div class="bento animate-in">
+      <div class="bento-item bento-big" style="background:linear-gradient(135deg,var(--panel),var(--surface));border-color:var(--cyan-dim);">
+        <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--phosphor);letter-spacing:.18em;text-transform:uppercase;margin-bottom:1rem;">8 Decades · 150+ Events</div>
+        <div class="bento-num" style="color:var(--cyan);">1943</div>
+        <div class="bento-lbl">Year Zero</div>
+        <p class="bento-desc">McCulloch &amp; Pitts publish the first mathematical model of a neuron — launching the entire field. From that single paper, artificial intelligence grew into the defining technology of the 21st century.</p>
+        <div style="margin-top:1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          <span class="tag tag-cyan">Neural</span>
+          <span class="tag tag-violet">Foundational</span>
+          <span class="tag tag-amber">1943</span>
+        </div>
+      </div>
+      <div class="bento-item">
+        <div class="bento-num" style="color:var(--rose);" data-count="42" data-suffix="">0</div>
+        <div class="bento-lbl">Critical Milestones</div>
+        <p class="bento-desc">Events that permanently changed the field's direction</p>
+      </div>
+      <div class="bento-item">
+        <div class="bento-num" style="color:var(--amber);" data-count="65" data-suffix="">0</div>
+        <div class="bento-lbl">Major Milestones</div>
+        <p class="bento-desc">Significant advances in techniques, hardware, or applications</p>
+      </div>
+      <div class="bento-item">
+        <div class="bento-num" style="color:var(--phosphor);" data-count="24" data-suffix="">0</div>
+        <div class="bento-lbl">Branches Created</div>
+        <p class="bento-desc">Distinct sub-disciplines born from the original AI vision</p>
+      </div>
+      <div class="bento-item">
+        <div class="bento-num" style="color:var(--violet);" data-count="80" data-suffix="+">0</div>
+        <div class="bento-lbl">Years of Progress</div>
+        <p class="bento-desc">From vacuum-tube neurons to trillion-parameter transformers</p>
+      </div>
+    </div>
+
+    <!-- FILTER + VIEW TOGGLE -->
+    <div class="filter-bar" style="margin-bottom:2rem;">
+      <input class="search-input" id="msSearch" type="search" placeholder="Search milestones…" style="max-width:300px;"/>
+      <div class="filter-chips">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="neural">Neural</button>
+        <button class="chip" data-filter="nlp">NLP</button>
+        <button class="chip" data-filter="vision">Vision</button>
+        <button class="chip" data-filter="rl">RL</button>
+        <button class="chip" data-filter="hardware">Hardware</button>
+        <button class="chip" data-filter="safety">Safety</button>
+        <button class="chip" data-filter="llm">LLM</button>
+        <button class="chip" data-filter="robotics">Robotics</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btnGrid" onclick="setView('grid')">⊞ Grid</button>
+        <button class="view-btn" id="btnTable" onclick="setView('table')">≡ Table</button>
+      </div>
+    </div>
+
+    <!-- GRID VIEW -->
+    <div id="gridView" class="ms-grid">
+
+      <!-- ===== CRITICAL ===== -->
+      <div class="ms-card animate-in" data-tags="neural foundational" style="--ms-color:var(--rose);">
+        <div class="ms-top">
+          <span class="ms-year">1943</span>
+          <span class="ms-impact impact-critical">Critical</span>
+        </div>
+        <div class="ms-title">McCulloch–Pitts Neuron Model</div>
+        <div class="ms-who">Warren McCulloch &amp; Walter Pitts · MIT</div>
+        <p class="ms-desc">The first mathematical model of a neuron — establishing that networks of binary threshold units can compute any logical function. The founding document of neural networks and computational neuroscience.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-violet">Foundational</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="1" data-tags="theory foundational" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">1950</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">The Turing Test</div>
+        <div class="ms-who">Alan Turing · University of Manchester</div>
+        <p class="ms-desc">Turing's "Computing Machinery and Intelligence" proposes the Imitation Game as a test of machine intelligence. Defines AI's central question for 70+ years and remains culturally dominant today.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">Theory</span><span class="tag tag-amber">Founder</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="2" data-tags="neural ml" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">1957</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">The Perceptron</div>
+        <div class="ms-who">Frank Rosenblatt · Cornell Aeronautical Lab</div>
+        <p class="ms-desc">First learning algorithm — a single-layer neural network that automatically learns to classify inputs. Marks the transition from hand-coded AI to data-driven learning machines.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-green">ML</span></div>
+        <div class="ms-stats"><span class="ms-stat">Params <strong>512</strong></span><span class="ms-stat">Training <strong>Supervised</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="3" data-tags="symbolic foundational" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">1956</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">Dartmouth Conference — AI Born</div>
+        <div class="ms-who">McCarthy, Minsky, Shannon, Rochester</div>
+        <p class="ms-desc">The summer workshop that formally founded Artificial Intelligence as a discipline. Ten researchers propose that "every aspect of learning or any other feature of intelligence can in principle be so precisely described that a machine can be made to simulate it."</p>
+        <div class="timeline-tags"><span class="tag tag-violet">Symbolic</span><span class="tag tag-amber">Foundational</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="4" data-tags="neural ml" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">1986</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">Backpropagation Popularised</div>
+        <div class="ms-who">Rumelhart, Hinton, Williams · Nature</div>
+        <p class="ms-desc">The algorithm for training multi-layer neural networks becomes practical and widely understood. Enables the entire field of deep learning — every modern neural network uses backprop or a derivative of it.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-green">ML</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="5" data-tags="neural vision ml" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">2012</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">AlexNet — Deep Learning Ignites</div>
+        <div class="ms-who">Krizhevsky, Sutskever, Hinton · University of Toronto</div>
+        <p class="ms-desc">Wins ImageNet with 15.3% top-5 error — crushing the 26.2% runner-up. This 10.9 point gap triggers a global pivot to deep learning. Every major tech company begins mass-hiring ML engineers within months.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Vision</span></div>
+        <div class="ms-stats">
+          <span class="ms-stat">Params <strong>60M</strong></span>
+          <span class="ms-stat">Error <strong>15.3%</strong></span>
+          <span class="ms-stat">GPU <strong>2× GTX 580</strong></span>
+        </div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="6" data-tags="nlp llm" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">2017</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">"Attention Is All You Need" — Transformer</div>
+        <div class="ms-who">Vaswani et al. · Google Brain</div>
+        <p class="ms-desc">Introduces the Transformer architecture — replacing RNNs with self-attention. Every modern LLM (GPT, BERT, Claude, Gemini, Llama) is built on this architecture. Cited 100,000+ times.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">NLP</span><span class="tag tag-violet">LLM</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="7" data-tags="nlp llm" style="--ms-color:var(--rose);">
+        <div class="ms-top"><span class="ms-year">Nov 2022</span><span class="ms-impact impact-critical">Critical</span></div>
+        <div class="ms-title">ChatGPT — AI Goes Mainstream</div>
+        <div class="ms-who">OpenAI</div>
+        <p class="ms-desc">Fastest consumer product to 100M users (2 months). Triggers a global AI arms race and makes AI a mainstream technology. Governments begin drafting regulation; every major tech company accelerates AI roadmaps.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">LLM</span><span class="tag tag-rose">Cultural</span></div>
+        <div class="ms-stats">
+          <span class="ms-stat">Users in 5 days <strong>1M</strong></span>
+          <span class="ms-stat">Users in 2 months <strong>100M</strong></span>
+        </div>
+      </div>
+
+      <!-- ===== MAJOR ===== -->
+      <div class="ms-card animate-in" data-tags="ml foundational" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">1959</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">Machine Learning Coined</div>
+        <div class="ms-who">Arthur Samuel · IBM</div>
+        <p class="ms-desc">Samuel coins "Machine Learning" while building a world-class checkers program — the first self-learning system to exceed its creator's ability. The term and paradigm now underpin virtually all modern AI.</p>
+        <div class="timeline-tags"><span class="tag tag-green">ML</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="1" data-tags="nlp" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">1964</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">ELIZA — First Chatbot</div>
+        <div class="ms-who">Joseph Weizenbaum · MIT</div>
+        <p class="ms-desc">First natural language processing chatbot simulating a Rogerian therapist. Users form emotional attachments despite no real understanding — sparking the first debate about AI anthropomorphism that echoes through to LLMs today.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">NLP</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="2" data-tags="neural vision" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">1989</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">LeNet — First Practical CNN</div>
+        <div class="ms-who">Yann LeCun et al. · Bell Labs</div>
+        <p class="ms-desc">Convolutional neural network trained with backpropagation to recognise handwritten digits. Deployed by the US Postal Service to read zip codes — the first real-world deep learning deployment.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Vision</span></div>
+        <div class="ms-stats"><span class="ms-stat">Accuracy <strong>99.2%</strong></span><span class="ms-stat">Data <strong>MNIST</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="3" data-tags="rl" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">1997</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">Deep Blue Defeats Kasparov</div>
+        <div class="ms-who">IBM Deep Blue</div>
+        <p class="ms-desc">First computer to beat a reigning world chess champion under standard tournament conditions. A cultural watershed moment — front-page news globally — that proves AI can surpass human expertise in complex strategic domains.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">RL</span><span class="tag tag-violet">Symbolic</span></div>
+        <div class="ms-stats"><span class="ms-stat">Score <strong>3.5–2.5</strong></span><span class="ms-stat">Speed <strong>200M pos/sec</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="4" data-tags="neural nlp" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">1997</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">LSTM — Long Short-Term Memory</div>
+        <div class="ms-who">Hochreiter &amp; Schmidhuber</div>
+        <p class="ms-desc">Solves the vanishing gradient problem in recurrent networks. LSTMs power speech recognition, machine translation, and text generation for 20 years — until Transformers supersede them.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-rose">NLP</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="5" data-tags="robotics vision" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2005</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">Stanley Wins DARPA Grand Challenge</div>
+        <div class="ms-who">Sebastian Thrun · Stanford AI Lab</div>
+        <p class="ms-desc">First autonomous vehicle to complete a 132-mile desert course. Spawns the autonomous driving industry: Waymo, Cruise, Tesla Autopilot, and others all trace their lineage to this moment.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">Robotics</span><span class="tag tag-amber">Vision</span></div>
+        <div class="ms-stats"><span class="ms-stat">Distance <strong>132 miles</strong></span><span class="ms-stat">Time <strong>6h 54m</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="6" data-tags="nlp ml" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2013</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">Word2Vec — Neural Word Embeddings</div>
+        <div class="ms-who">Mikolov et al. · Google</div>
+        <p class="ms-desc">Learns rich semantic word representations from text. Demonstrates that word arithmetic encodes meaning ("king"−"man"+"woman"≈"queen"). Transforms NLP from hand-crafted features to learned representations.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">NLP</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="7" data-tags="neural vision" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2014</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">GANs — Generative Adversarial Networks</div>
+        <div class="ms-who">Ian Goodfellow et al. · Université de Montréal</div>
+        <p class="ms-desc">Two competing networks (generator vs discriminator) produce photorealistic images. Launches the generative AI revolution — deepfakes, synthetic data, and eventually diffusion models all stem from this idea.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">Generative</span><span class="tag tag-amber">Vision</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="8" data-tags="rl neural" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2016</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">AlphaGo Defeats Lee Sedol</div>
+        <div class="ms-who">DeepMind</div>
+        <p class="ms-desc">Go has more board positions than atoms in the universe. AlphaGo's 4-1 victory over world champion Lee Sedol was predicted to be at least a decade away. Move 37 in Game 2 stunned professional players worldwide.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">RL</span><span class="tag tag-cyan">Neural</span></div>
+        <div class="ms-stats"><span class="ms-stat">Score <strong>4–1</strong></span><span class="ms-stat">Viewers <strong>60M+</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="9" data-tags="nlp llm" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2018</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">BERT — Bidirectional Transformers</div>
+        <div class="ms-who">Devlin et al. · Google AI</div>
+        <p class="ms-desc">Pre-trained bidirectional transformer achieves state-of-the-art on 11 NLP benchmarks. Transfer learning becomes the dominant NLP paradigm — pre-train on massive text, fine-tune on specific tasks.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">NLP</span><span class="tag tag-violet">LLM</span></div>
+        <div class="ms-stats"><span class="ms-stat">Params <strong>340M</strong></span><span class="ms-stat">Benchmarks <strong>11/11</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="10" data-tags="llm nlp" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2020</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">GPT-3 — Emergent Few-Shot Learning</div>
+        <div class="ms-who">OpenAI</div>
+        <p class="ms-desc">At 175B parameters, GPT-3 demonstrates emergent few-shot learning — solving tasks it was never explicitly trained for with only a few examples. Microsoft licenses it exclusively for $1 billion.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">LLM</span></div>
+        <div class="ms-stats"><span class="ms-stat">Params <strong>175B</strong></span><span class="ms-stat">Training tokens <strong>300B</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="11" data-tags="vision llm" style="--ms-color:var(--amber);">
+        <div class="ms-top"><span class="ms-year">2021</span><span class="ms-impact impact-major">Major</span></div>
+        <div class="ms-title">AlphaFold 2 — Protein Folding Solved</div>
+        <div class="ms-who">DeepMind</div>
+        <p class="ms-desc">Predicts 3D protein structures from amino acid sequences with atomic accuracy — solving a 50-year grand challenge. Science magazine's Breakthrough of the Year. 200M+ structures released freely.</p>
+        <div class="timeline-tags"><span class="tag tag-green">Science</span><span class="tag tag-cyan">Neural</span></div>
+        <div class="ms-stats"><span class="ms-stat">Accuracy <strong>~Angstrom</strong></span><span class="ms-stat">Structures released <strong>200M+</strong></span></div>
+      </div>
+
+      <!-- ===== NOTABLE ===== -->
+      <div class="ms-card animate-in" data-tags="hardware" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">1951</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">SNARC — First Neural Network Machine</div>
+        <div class="ms-who">Minsky &amp; Edmonds · Princeton</div>
+        <p class="ms-desc">3000 vacuum tubes simulating 40 neurons with adjustable synaptic weights — the first physical neural network computer.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span><span class="tag tag-amber">Hardware</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="1" data-tags="symbolic" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">1965</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">DENDRAL — First Expert System</div>
+        <div class="ms-who">Feigenbaum, Lederberg · Stanford</div>
+        <p class="ms-desc">Identifies molecular structures from mass spectrometry data, outperforming expert chemists — the first AI to demonstrate superhuman performance in a real scientific domain.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">Symbolic</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="2" data-tags="neural ml" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">1982</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">Hopfield Networks</div>
+        <div class="ms-who">John Hopfield · Caltech</div>
+        <p class="ms-desc">Recurrent networks with associative memory properties re-legitimise neural network research after the perceptron winter, directly inspiring Hinton's Boltzmann machines.</p>
+        <div class="timeline-tags"><span class="tag tag-cyan">Neural</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="3" data-tags="ml" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">1992</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">Support Vector Machines</div>
+        <div class="ms-who">Vapnik &amp; Cortes · Bell Labs</div>
+        <p class="ms-desc">Principled statistical classification using maximum-margin hyperplanes. Dominates ML competitions throughout the 2000s before neural networks overtake in 2012.</p>
+        <div class="timeline-tags"><span class="tag tag-green">ML</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="4" data-tags="hardware" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2008</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">CUDA Enables GPU-Accelerated ML</div>
+        <div class="ms-who">NVIDIA + Andrew Ng · Stanford</div>
+        <p class="ms-desc">General-purpose GPU programming with CUDA enables deep networks to train 70× faster than CPUs — the hardware catalyst for the 2012 deep learning explosion.</p>
+        <div class="timeline-tags"><span class="tag tag-amber">Hardware</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="5" data-tags="rl neural" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2013</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">DQN — Deep Q-Network Plays Atari</div>
+        <div class="ms-who">Mnih et al. · DeepMind</div>
+        <p class="ms-desc">Deep neural network learns to play 49 Atari games at superhuman level from raw pixels — no game-specific engineering. Combines RL with deep learning for the first time at scale.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">RL</span><span class="tag tag-cyan">Neural</span></div>
+        <div class="ms-stats"><span class="ms-stat">Games <strong>49</strong></span><span class="ms-stat">Superhuman <strong>29/49</strong></span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="6" data-tags="vision llm" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2021</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">DALL-E &amp; CLIP — Text-to-Image</div>
+        <div class="ms-who">OpenAI</div>
+        <p class="ms-desc">DALL-E generates creative images from text prompts; CLIP learns joint text-image representations. Together they launch the text-to-image revolution — Stable Diffusion, Midjourney, and Imagen follow within a year.</p>
+        <div class="timeline-tags"><span class="tag tag-amber">Vision</span><span class="tag tag-violet">Generative</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="7" data-tags="safety llm" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2022</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">RLHF — Aligning LLMs with Human Feedback</div>
+        <div class="ms-who">Stiennon, Ouyang et al. · OpenAI</div>
+        <p class="ms-desc">Reinforcement Learning from Human Feedback trains models to be helpful and harmless. The key technique behind ChatGPT and all modern aligned AI assistants.</p>
+        <div class="timeline-tags"><span class="tag tag-rose">Safety</span><span class="tag tag-violet">LLM</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="8" data-tags="llm nlp" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2023</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">GPT-4 — Multimodal Reasoning</div>
+        <div class="ms-who">OpenAI</div>
+        <p class="ms-desc">Accepts images and text as input; scores in the top 10% of bar exam, top 1% of biology olympiad. The first widely-deployed multimodal foundation model demonstrating expert-level reasoning.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">LLM</span><span class="tag tag-rose">Multimodal</span></div>
+      </div>
+
+      <div class="ms-card animate-in" data-delay="9" data-tags="llm safety" style="--ms-color:var(--cyan);">
+        <div class="ms-top"><span class="ms-year">2024</span><span class="ms-impact impact-notable">Notable</span></div>
+        <div class="ms-title">o1 — Chain-of-Thought Reasoning Models</div>
+        <div class="ms-who">OpenAI</div>
+        <p class="ms-desc">Reasoning models that "think before answering" using extended chain-of-thought. Achieves PhD-level performance on mathematics, physics, and biology — a qualitative leap in AI reasoning capability.</p>
+        <div class="timeline-tags"><span class="tag tag-violet">LLM</span><span class="tag tag-violet">Reasoning</span></div>
+      </div>
+
+    </div><!-- end grid view -->
+
+    <!-- TABLE VIEW -->
+    <div id="tableView" class="hidden">
+      <div class="ms-table-wrap">
+        <table class="ms-table" id="msTable">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Milestone</th>
+              <th>Domain</th>
+              <th>Significance</th>
+            </tr>
+          </thead>
+          <tbody id="msTableBody">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-brand">AI<span>History</span></div>
+  <p class="footer-copy">AI HISTORY © 2024 — 150+ Milestones Documented</p>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+// Table data
+const milestoneData = [
+  {year:'1943',title:'McCulloch–Pitts Neuron',domain:'Neural',desc:'First mathematical model of a neuron; computing theory basis of ANNs'},
+  {year:'1950',title:'Turing Test Proposed',domain:'Theory',desc:'Imitation game defines machine intelligence benchmark'},
+  {year:'1951',title:'SNARC Neural Machine',domain:'Neural/HW',desc:'First physical neural network computer; 3000 vacuum tubes'},
+  {year:'1956',title:'Dartmouth Conference',domain:'Symbolic',desc:'AI founded as a discipline; term "Artificial Intelligence" coined'},
+  {year:'1957',title:'Perceptron Algorithm',domain:'Neural/ML',desc:'First supervised learning algorithm; pattern classification'},
+  {year:'1958',title:'Lisp Language',domain:'Symbolic',desc:'Primary AI programming language for 30 years'},
+  {year:'1959',title:'Machine Learning Coined',domain:'ML',desc:'Samuel\'s checkers program; first self-improving software'},
+  {year:'1964',title:'ELIZA Chatbot',domain:'NLP',desc:'First conversational AI; Rogerian therapist simulation'},
+  {year:'1965',title:'DENDRAL Expert System',domain:'Symbolic',desc:'First AI to match expert-level scientific performance'},
+  {year:'1966',title:'ALPAC Report',domain:'NLP',desc:'Machine translation failure triggers NLP funding collapse'},
+  {year:'1969',title:'Perceptrons Book',domain:'Neural',desc:'Minsky & Papert prove perceptron limits; sets back neural research'},
+  {year:'1972',title:'MYCIN Medical AI',domain:'Symbolic',desc:'Expert system matching physician diagnostic accuracy'},
+  {year:'1974',title:'Backpropagation Derived',domain:'Neural',desc:'Werbos PhD thesis — training multi-layer networks; ignored for a decade'},
+  {year:'1982',title:'Hopfield Networks',domain:'Neural',desc:'Associative memory; rekindled neural research'},
+  {year:'1986',title:'Backprop Popularised',domain:'Neural',desc:'Rumelhart, Hinton, Williams — Nature paper launches deep learning'},
+  {year:'1989',title:'LeNet CNN',domain:'Vision',desc:'Convolutional nets for handwriting; deployed by US Postal Service'},
+  {year:'1992',title:'Support Vector Machines',domain:'ML',desc:'Maximum-margin classifiers; dominant method until 2012'},
+  {year:'1997',title:'LSTM Networks',domain:'Neural/NLP',desc:'Solved vanishing gradient; powered speech & translation for 20 years'},
+  {year:'1997',title:'Deep Blue vs Kasparov',domain:'RL',desc:'First computer to defeat world chess champion; landmark cultural moment'},
+  {year:'2001',title:'Bayesian Spam Filters',domain:'ML/NLP',desc:'First mass-scale ML deployment touching hundreds of millions of users'},
+  {year:'2005',title:'DARPA Challenge Won',domain:'Robotics',desc:'Autonomous vehicle completes 132-mile desert course; spawns AV industry'},
+  {year:'2006',title:'Deep Belief Networks',domain:'Neural',desc:'Hinton — effective deep network training; launches deep learning era'},
+  {year:'2007',title:'ImageNet Founded',domain:'Vision',desc:'14M labelled images; the dataset that triggers 2012 revolution'},
+  {year:'2008',title:'CUDA for ML',domain:'Hardware',desc:'GPU training 70× faster than CPU; hardware foundation for deep learning'},
+  {year:'2012',title:'AlexNet ImageNet Win',domain:'Vision',desc:'15.3% error vs 26.2% runner-up; global pivot to deep learning'},
+  {year:'2013',title:'Word2Vec',domain:'NLP',desc:'Neural word embeddings; semantic arithmetic in vector space'},
+  {year:'2013',title:'DQN Atari',domain:'RL',desc:'DeepMind — superhuman Atari play from pixels; deep RL breakthrough'},
+  {year:'2014',title:'GANs',domain:'Generative',desc:'Goodfellow — adversarial generative networks; photorealistic image synthesis'},
+  {year:'2014',title:'Seq2Seq + Attention',domain:'NLP',desc:'Neural machine translation; precursor to Transformer architecture'},
+  {year:'2016',title:'AlphaGo defeats Sedol',domain:'RL',desc:'World Go champion defeated 4-1; superhuman game AI achieved'},
+  {year:'2017',title:'Transformer Architecture',domain:'NLP/LLM',desc:'Self-attention replaces RNNs; backbone of every modern LLM'},
+  {year:'2018',title:'BERT',domain:'NLP/LLM',desc:'Bidirectional pretrained transformer; 11/11 NLP benchmarks SOTA'},
+  {year:'2018',title:'GPT-1',domain:'LLM',desc:'OpenAI first language model; unsupervised pretraining + fine-tuning'},
+  {year:'2019',title:'GPT-2',domain:'LLM',desc:'1.5B param model "too dangerous to release"; launches safety debate'},
+  {year:'2020',title:'GPT-3',domain:'LLM',desc:'175B params; emergent few-shot learning; $1B Microsoft licence'},
+  {year:'2021',title:'DALL-E & CLIP',domain:'Vision/Gen',desc:'Text-to-image generation; joint text-image representation learning'},
+  {year:'2021',title:'AlphaFold 2',domain:'Science',desc:'Protein structure prediction at atomic accuracy; 50-year problem solved'},
+  {year:'2022',title:'RLHF Alignment',domain:'Safety/LLM',desc:'Human feedback training for helpful, harmless AI assistants'},
+  {year:'2022',title:'Stable Diffusion',domain:'Vision/Gen',desc:'Open-source text-to-image; millions of users overnight'},
+  {year:'2022',title:'ChatGPT',domain:'LLM',desc:'100M users in 2 months; fastest consumer product ever; AI goes mainstream'},
+  {year:'2023',title:'GPT-4 Multimodal',domain:'LLM',desc:'Vision + text; top 10% bar exam; expert-level reasoning'},
+  {year:'2023',title:'Llama 2 Open Source',domain:'LLM',desc:'Meta open-sources large language models; democratises LLM access'},
+  {year:'2024',title:'o1 Reasoning Models',domain:'LLM',desc:'Chain-of-thought reasoning; PhD-level math, physics, biology'},
+  {year:'2024',title:'Sora Video Generation',domain:'Vision/Gen',desc:'Text-to-video with cinematic quality; new generative modality'},
+  {year:'2024',title:'Nobel Prize — AlphaFold',domain:'Science',desc:'Demis Hassabis & John Jumper win Nobel Chemistry for AlphaFold'},
+];
+
+function buildTable(data) {
+  const tbody = document.getElementById('msTableBody');
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>${m.year}</td>
+      <td>${m.title}</td>
+      <td>${m.domain}</td>
+      <td>${m.desc}</td>
+    </tr>
+  `).join('');
+}
+buildTable(milestoneData);
+
+function setView(v) {
+  const grid = document.getElementById('gridView');
+  const table = document.getElementById('tableView');
+  const btnG = document.getElementById('btnGrid');
+  const btnT = document.getElementById('btnTable');
+  if (v === 'grid') {
+    grid.classList.remove('hidden');
+    table.classList.add('hidden');
+    btnG.classList.add('active');
+    btnT.classList.remove('active');
+  } else {
+    grid.classList.add('hidden');
+    table.classList.remove('hidden');
+    btnT.classList.add('active');
+    btnG.classList.remove('active');
+  }
+}
+
+// Filter for grid
+window.AI.initFilters({
+  searchId: 'msSearch',
+  chipsSelector: '.chip',
+  itemsSelector: '.ms-card',
+  textSelector: '.ms-title, .ms-desc',
+  tagSelector: '.tag',
+});
+
+// Also filter table
+document.getElementById('msSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const rows = document.querySelectorAll('#msTableBody tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+</body>
+</html>
